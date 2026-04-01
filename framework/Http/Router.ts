@@ -6,7 +6,6 @@ export class Router {
     private routes: RouteDefinitionInterface[] = [];
 
     get(path: string, handler: string) {
-        console.log("Adding route", { method: "GET", path, handler });
         this.add("GET", path, handler);
     }
 
