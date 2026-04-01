@@ -5,7 +5,7 @@ export const server = () => {
     const app = new Kernel(webRouter);
 
     const instance = Bun.serve({
-        port: 5000,
+        port: process.env.port || 5000,
         fetch: (request) => {
             return app.handle(request);
         }
