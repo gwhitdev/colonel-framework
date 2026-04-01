@@ -1,5 +1,8 @@
 # Colonel
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![SPDX License](https://img.shields.io/badge/SPDX-MIT-blue.svg)](https://spdx.org/licenses/MIT.html)
+
 Colonel is a small TypeScript web framework experiment running on Bun.
 
 ## Getting Started
@@ -34,17 +37,17 @@ The framework currently includes:
 
 Current project structure is organized into:
 
-- `framework/` for core framework internals (HTTP, container, view handling)
-- `app/` for user land controllers, services, models, and app logic
-- `routes/` for route registration
-- `resources/views/` for EJS templates
-- `bootstrap/` for server startup wiring
+- [framework/](framework/) for core framework internals (HTTP, container, view handling)
+- [app/](app/) for user land controllers, services, models, and app logic
+- [routes/](routes/) for route registration
+- [resources/views/](resources/views/) for EJS templates
+- [bootstrap/](bootstrap/) for server startup wiring
 
 ## License
 
 This project is licensed under the MIT License.
 
-See the `LICENSE` file for full details.
+See the [LICENSE](LICENSE) file for full details.
 
 ## Contributing
 
@@ -68,7 +71,7 @@ bun run start
 
 Contribution guidelines:
 
-- Keep framework internals in `framework/` and app-specific code in `app/`.
+- Keep framework internals in [framework/](framework/) and app-specific code in [app/](app/).
 - Prefer small, reviewable pull requests.
 - Preserve existing coding style and naming conventions.
 - Include docs updates when behavior or APIs change.
