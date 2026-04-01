@@ -1,4 +1,4 @@
-[Colonel Web Framework](colonel.png)
+![Colonel Web Framework](colonel.png)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![SPDX License](https://img.shields.io/badge/SPDX-MIT-blue.svg)](https://spdx.org/licenses/MIT.html)
