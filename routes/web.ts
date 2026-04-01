@@ -3,6 +3,7 @@ import { Router } from '../framework/Http/Router';
 const web = new Router();
 web.get('/health', 'AppController@health');
 web.get('/', 'AppController@index');
+web.get('/users', 'UserController@index');
 web.get('/users/:id', 'UserController@show');
 //router.get('/users', 'UserController@index');
 //router.post('/users', 'UserController@store');

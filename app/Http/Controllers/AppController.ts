@@ -1,4 +1,3 @@
-import type { indexOfLine } from 'bun';
 import Controller from './Controller';
 
 export class AppController extends Controller {
@@ -9,7 +8,10 @@ export class AppController extends Controller {
     index(): Record<string, any> {
         return [
             'base/index',
-            { }
+            {
+                "titleData": "Welcome",
+                
+            },
         ]
     }
 }

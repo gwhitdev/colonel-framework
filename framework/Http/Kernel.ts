@@ -6,6 +6,26 @@ import type { HttpMethod } from './types/HttpMethod';
 import { join, resolve } from 'node:path';
 import ejs from 'ejs';
 
+type ViewPayload = [
+    template: string,
+    data?: Record<string, any>,
+    layout?: string | null,
+    footerPartial?: string,
+    titlePartial?: string
+];
+
+const isViewPayload = (value: any): value is ViewPayload => {
+    if (!Array.isArray(value)) return false;
+    if (typeof value[0] !== "string") return false;
+    if (value[1] !== undefined && (typeof value[1] !== "object" || value[1] === null)) return false;
+    if (value[2] !== undefined && typeof value[2] !== "string" && value[2] !== null) return false;
+    if (value[3] !== undefined && typeof value[3] !== "string") return false;
+    if (value[4] !== undefined && typeof value[4] !== "string") return false;
+    return true;
+};
+
+const safeViewPath = (view: string) => view.replace(/\.\./g, '').replace(/\/+/g, '/');
+
 export class Kernel {
     constructor(
         private router = new Router(),
@@ -32,9 +52,10 @@ export class Kernel {
                 return this.dispatchToRouter(httpRequest)
             });
 
-            return this.normalizeResponse(response);
+            return await this.normalizeResponse(response);
         } catch (error) {
-            return this.handleException(error);
+            console.error(error);
+            return this.handleException("Middleware couldn't process the request", 500);
         }
     }
 
@@ -95,42 +116,93 @@ export class Kernel {
     /**
      * Convert controller output into a proper Response
      */
-    private normalizeResponse(result: any): Promise<Response> | Response {
+    private async normalizeResponse(result: any): Promise<Response> {
         if (result instanceof Response) return result;
 
-        if (Array.isArray(result) && result[0].split("/").length === 2 && typeof result[0] === "string") {
-            return ejs.renderFile(
-                join(resolve(), "resources", "views",`${result[0]!}.ejs`),
-                (result[1] as Record<string, string>) || { data: {} })
+        if (isViewPayload(result)) {
+            const [
+                template,
+                data = {},
+                layout = "base/layouts/main",
+                footerPartial = "base/partials/footer",
+                titlePartial = "base/partials/title",
+            ] = result;
 
-                .then(html => new Response(html, {
-                    headers: { "Content-Type": "text/html" }
-                }))
+            const safeTemplate = safeViewPath(template);
+            
+            // Inject env appName into titleData if available
+            process.env.appName ? data.titleData = `${data.titleData} | ${process.env.appName}`: null; 
 
-                .catch(err => {
-                    console.error(err);
-                    return new Response("Error rendering view", { status: 500 });
+            try {
+                const childPath = join(resolve(), "resources", "views", `${safeTemplate}.ejs`);
+                const bodyHtml = await ejs.renderFile(childPath, data || {});
+
+                // Wrap in layout if provided
+                if (layout) {
+                    const returnPath = async (path: string): Promise<string> => 
+                        join(resolve(), "resources", "views", `${safeViewPath(path)}.ejs`);
+                    
+                    const [layoutPath, footerPath, titlePath] = await Promise.all([
+                        returnPath(layout),
+                        returnPath(footerPartial),
+                        returnPath(titlePartial)
+                    ]);
+
+                    console.info(`Rendering layout: ${layoutPath}`);
+
+                    const [bodyHtml, footerHtml, titleHtml] = await Promise.all([
+                        ejs.renderFile(childPath, data || {}),
+                        ejs.renderFile(footerPath, {
+                            footerData:(data as any).footerData 
+                            || ''
+                        }),
+                        ejs.renderFile(titlePath, {
+                            titleData: (data as any).titleData
+                            || ''
+                        })
+                    ]);
+
+                    console.info(`Rendering view: ${childPath}`);
+
+                    const finalHtml = await ejs.renderFile(layoutPath, { 
+                        ...(data ?? {}), 
+                        body: bodyHtml,
+                        footer: footerHtml,
+                        title: titleHtml
+                    });
+
+                    return new Response(finalHtml, {
+                        headers: { "Content-Type": "text/html; charset=utf-8" }
+                    });
+                }
+
+                // No layout, return child as-is
+                return new Response(bodyHtml, {
+                    headers: { "Content-Type": "text/html; charset=utf-8" }
                 });
+            } catch (err) {
+                console.error(err);
+                return this.handleException("Error rendering value", 500)
+            }
         }
 
-        if (typeof result === "object") {
+        if (typeof result === "object" && result !== null) {
             return new Response(JSON.stringify(result), {
                 headers: { "Content-Type": "application/json" }
             });
         }
-       
 
-        return new Response("Bad Request", { status: 400 });
+        return new Response(String(result ?? ""), { status: 200 });
     }
 
     /** 
      * Centralized error handling
      */
-    private handleException(error: any): Response {
+    private handleException(error: any, code: number): Response {
         console.error(error);
-
-        return new Response("Internal Server Error", { 
-            status: 500 
+        const errorString = error ?? "Internal Server Error";
+        return new Response(errorString, { 
+            status: code 
         });
     }
 }
