@@ -25,9 +25,9 @@ export const toPublicFilePath = (pathname: string, path: {
     resolve: (...parts: string[]) => string;
     normalize: (p: string) => string;
     sep: string;
-}): string => {
+}, publicRootInput?: string): string => {
     const {  resolve, normalize, sep } = path;
-    const publicRoot = resolve(process.cwd(), "public");
+    const publicRoot = publicRootInput ? resolve(publicRootInput) : resolve(process.cwd(), "public");
 
     const cleaned = normalize(
         pathname.replace(/^\/(static|assets|public)\//, "")

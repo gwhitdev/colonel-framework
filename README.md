@@ -36,13 +36,13 @@ The framework currently includes:
 	- Partials (for example title and footer)
 - Basic JSON and plain text response normalization.
 
-Current project structure is organized into:
+Current project structure is organized as a Bun workspace:
 
-- [framework/](framework/) for core framework internals (HTTP, container, view handling)
-- [app/](app/) for user land controllers, services, models, and app logic
-- [routes/](routes/) for route registration
-- [resources/views/](resources/views/) for EJS templates
-- [bootstrap/](bootstrap/) for server startup wiring
+- [packages/framework/](packages/framework/) for reusable framework internals (HTTP, container, view handling)
+- [apps/web/src/app/](apps/web/src/app/) for user land controllers, services, models, and app logic
+- [apps/web/src/config/routes/](apps/web/src/config/routes/) for route registration
+- [apps/web/resources/views/](apps/web/resources/views/) for EJS templates
+- [apps/web/src/bootstrap/](apps/web/src/bootstrap/) for server startup wiring
 
 ## License
 
@@ -72,7 +72,7 @@ bun run start
 
 Contribution guidelines:
 
-- Keep framework internals in [framework/](framework/) and app-specific code in [app/](app/).
+- Keep framework internals in [packages/framework/](packages/framework/) and app-specific code in [apps/web/src/app/](apps/web/src/app/).
 - Prefer small, reviewable pull requests.
 - Preserve existing coding style and naming conventions.
 - Include docs updates when behavior or APIs change.

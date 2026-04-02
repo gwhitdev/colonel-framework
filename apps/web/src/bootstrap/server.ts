@@ -1,14 +1,31 @@
-import { Kernel } from "../framework/Http/Kernel";
+import { Kernel } from "@colonel/framework/Http/Kernel";
 import webRouter  from "../config/routes/web";
 import { existsSync } from "fs";
 import { extensions } from "../config/acceptedStaticContentTypes";
-import { isStaticPath, contentTypeFor, toPublicFilePath } from "../framework/Http/staticFiles";
+import { isStaticPath, contentTypeFor, toPublicFilePath } from "@colonel/framework/Http/staticFiles";
 import { staticPaths } from "../config/staticPaths";
-import path, {extname} from "path";
+import path, { extname } from "path";
+
+const viewsRoot = path.resolve(import.meta.dir, "..", "..", "resources", "views");
+const publicRoot = path.resolve(import.meta.dir, "..", "..", "public");
+const controllerRoot = path.resolve(import.meta.dir, "..", "app", "Http", "Controllers");
 
 export const server = () => {
-    const Colonel = new Kernel(webRouter);
-    const PORT: Number = Number(process.env.PORT) || 5000;
+    const Colonel = new Kernel(webRouter, [], {
+        viewsRoot,
+        controllerResolver: async (name: string) => {
+            const modulePath = `${controllerRoot}/${name}.ts`;
+            const mod = await import(modulePath);
+            const controller = mod[name];
+
+            if (!controller) {
+                throw new Error(`Controller not found: ${name}`);
+            }
+
+            return controller;
+        }
+    });
+    const PORT = Number(process.env.PORT) || 5000;
     
     console.log(`Server running at http://localhost:${PORT}/`);
 
@@ -35,7 +52,7 @@ export const server = () => {
         };
 
     return Bun.serve({
-        port: PORT.toString() || 5000,
+        port: PORT,
 
         fetch: async (request) => {
             const url = new URL(request.url);
@@ -46,7 +63,7 @@ export const server = () => {
                 let filePath: string;
 
                 try {
-                    filePath = toPublicFilePath(url.pathname, path);
+                    filePath = toPublicFilePath(url.pathname, path, publicRoot);
                 } catch {
                     console.warn(`Invalid static file path: ${url.pathname}`);
                     return new Response("Not Found", { status: 404 });

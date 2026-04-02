@@ -10,6 +10,11 @@
 
     // Bundler mode
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@colonel/framework/*": ["packages/framework/src/*"],
+      "@app/*": ["apps/web/src/*"]
+    },
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,

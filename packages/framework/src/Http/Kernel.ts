@@ -1,10 +1,18 @@
-import Controller from '../../app/Http/Controllers/Controller';
 import { HttpRequest } from './HttpRequest';
 import { Router } from './Router';
 //import { Container } from '../Container/Container';
 import type { HttpMethod } from './types/HttpMethod';
 import { join, resolve } from 'node:path';
 import ejs from 'ejs';
+import type { RouteHandler } from './types/RouteHandler';
+
+type ControllerClass = new () => Record<string, unknown>;
+type ControllerResolver = (name: string) => Promise<ControllerClass>;
+
+interface KernelOptions {
+    controllerResolver?: ControllerResolver;
+    viewsRoot?: string;
+}
 
 type ViewPayload = [
     template: string,
@@ -30,8 +38,21 @@ export class Kernel {
     constructor(
         private router = new Router(),
         //private container = new Container(),
-        private middleware: Array<Function> = []
+        private middleware: Array<Function> = [],
+        private options: KernelOptions = {}
     ) {}
+
+    private async resolveController(name: string): Promise<ControllerClass> {
+        if (!this.options.controllerResolver) {
+            throw new Error(`No controller resolver configured for handler ${name}`);
+        }
+
+        return this.options.controllerResolver(name);
+    }
+
+    private viewRoot(): string {
+        return this.options.viewsRoot ?? join(resolve(), "resources", "views");
+    }
 
     /**
      * Main entrypoint for every HTTP request.
@@ -94,7 +115,13 @@ export class Kernel {
             return route.handler(req);
         }
 
-        const parts: string[] = route.handler.split("@");
+        const handler = route.handler as RouteHandler;
+
+        if (typeof handler !== "string") {
+            return new Response("Invalid route handler type", { status: 500 });
+        }
+
+        const parts: string[] = handler.split("@");
 
         if (parts.length !== 2) {
             return new Response("Invalid route handler format", { status: 500 });
@@ -102,10 +129,7 @@ export class Kernel {
 
         const [controllerName, method] = parts;
 
-        const controllerPath = (name: string) => `../../app/Http/Controllers/${name}.ts`;
-
-        const ImportedControllerClass = await import(controllerPath(controllerName!))
-            .then(m => m[controllerName!] as typeof Controller);
+        const ImportedControllerClass = await this.resolveController(controllerName!);
 
         const controllerInstance = new ImportedControllerClass();
 
@@ -139,13 +163,13 @@ export class Kernel {
             process.env.appName ? data.titleData = `${data.titleData} | ${process.env.appName}`: null; 
 
             try {
-                const childPath = join(resolve(), "resources", "views", `${safeTemplate}.ejs`);
+                const childPath = join(this.viewRoot(), `${safeTemplate}.ejs`);
                 const bodyHtml = await ejs.renderFile(childPath, data || {});
 
                 // Wrap in layout if provided
                 if (layout) {
                     const returnPath = async (path: string): Promise<string> => 
-                        join(resolve(), "resources", "views", `${safeViewPath(path)}.ejs`);
+                        join(this.viewRoot(), `${safeViewPath(path)}.ejs`);
                     
                     const [layoutPath, footerPath, titlePath] = await Promise.all([
                         returnPath(layout),

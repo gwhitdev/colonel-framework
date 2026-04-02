@@ -1,6 +1,5 @@
-import type { HttpRequest } from "../../../framework/Http/HttpRequest";
+import type { HttpRequest } from "@colonel/framework/Http/HttpRequest";
 import Controller from "./Controller";
-import View from "../../../framework/View/View";
 
 
 export class UserController extends Controller {

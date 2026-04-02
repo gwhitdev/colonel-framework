@@ -1,10 +1,14 @@
 {
   "name": "colonel",
-  "module": "index.ts",
+  "module": "apps/web/src/index.ts",
   "type": "module",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "start": "bun --watch index.ts"
+    "start": "bun --watch apps/web/src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

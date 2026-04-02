@@ -1,5 +1,5 @@
-import { Router } from '../../framework/Http/Router';
-import { redirect } from '../../framework/Http/HttpResponse';
+import { Router } from '@colonel/framework/Http/Router';
+import { redirect } from '@colonel/framework/Http/HttpResponse';
 
 const web = new Router();
 
