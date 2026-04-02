@@ -6,6 +6,39 @@
 ## About Colonel
 Colonel is a small TypeScript web framework experiment running on Bun.
 
+## Download And Run Locally
+
+1. Install Bun if you do not already have it:
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+2. Clone the repository:
+
+```bash
+git clone https://github.com/<your-user>/colonel.git
+cd colonel
+```
+
+3. Install dependencies:
+
+```bash
+bun install
+```
+
+4. Start the development server:
+
+```bash
+bun run start
+```
+
+5. Open your browser:
+
+```text
+http://localhost:5000
+```
+
 ## Getting Started
 
 Install dependencies:
@@ -21,6 +54,26 @@ bun run start
 ```
 
 By default, the HTTP server runs on port `5000`.
+
+## Scaffold A New App
+
+Colonel can be scaffolded from the command line similar to other frameworks.
+
+After publishing packages:
+
+```bash
+bun create colonel my-app
+cd my-app
+bun run start
+```
+
+During local development in this monorepo, you can test the scaffolder directly:
+
+```bash
+bun packages/create-colonel/src/cli.ts my-app
+cd my-app
+bun run start
+```
 
 ## Framework Outline (Current)
 

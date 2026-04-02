@@ -1,0 +1,15 @@
+{
+  "name": "create-colonel",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "src",
+    "template"
+  ],
+  "bin": {
+    "create-colonel": "./src/cli.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
