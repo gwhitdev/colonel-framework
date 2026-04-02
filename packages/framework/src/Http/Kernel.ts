@@ -1,12 +1,13 @@
 import { HttpRequest } from './HttpRequest';
 import { Router } from './Router';
-//import { Container } from '../Container/Container';
 import type { HttpMethod } from './types/HttpMethod';
 import { join, resolve } from 'node:path';
 import ejs from 'ejs';
 import type { RouteHandler } from './types/RouteHandler';
+import type { Container } from '../Container/Container';
 
-type ControllerClass = new () => Record<string, unknown>;
+
+type ControllerClass = new (...args: any[]) => object;
 type ControllerResolver = (name: string) => Promise<ControllerClass>;
 
 interface KernelOptions {
@@ -37,9 +38,9 @@ const safeViewPath = (view: string) => view.replace(/\.\./g, '').replace(/\/+/g,
 export class Kernel {
     constructor(
         private router = new Router(),
-        //private container = new Container(),
         private middleware: Array<Function> = [],
-        private options: KernelOptions = {}
+        private options: KernelOptions = {},
+        private container: Container,
     ) {}
 
     private async resolveController(name: string): Promise<ControllerClass> {
@@ -131,7 +132,7 @@ export class Kernel {
 
         const ImportedControllerClass = await this.resolveController(controllerName!);
 
-        const controllerInstance = new ImportedControllerClass();
+        const controllerInstance = this.container.make(ImportedControllerClass);
 
         const action = (controllerInstance as any)[method!] as (req: HttpRequest) => Promise<Response> | Response;
 

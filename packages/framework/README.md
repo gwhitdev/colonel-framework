@@ -27,10 +27,11 @@ The package currently exports framework primitives from the root entry:
 ## Example
 
 ```ts
-import { Kernel, Router } from "@coloneldev/framework";
+import { Container, Kernel, Router } from "@coloneldev/framework";
 
 const router = new Router();
-const kernel = new Kernel(router);
+const container = new Container();
+const kernel = new Kernel(router, [], {}, container);
 ```
 
 ## License

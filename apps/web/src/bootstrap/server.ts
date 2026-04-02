@@ -5,10 +5,15 @@ import { extensions } from "../config/acceptedStaticContentTypes";
 import { isStaticPath, contentTypeFor, toPublicFilePath } from "@coloneldev/framework";
 import { staticPaths } from "../config/staticPaths";
 import path, { extname } from "path";
+import { Container } from "@coloneldev/framework";
+import { AppInfoService } from "../app/Services/AppInfoService.ts";
 
 const viewsRoot = path.resolve(import.meta.dir, "..", "..", "resources", "views");
 const publicRoot = path.resolve(import.meta.dir, "..", "..", "public");
 const controllerRoot = path.resolve(import.meta.dir, "..", "app", "Http", "Controllers");
+const container = new Container();
+
+container.singleton(AppInfoService, () => new AppInfoService(process.env.appName ?? "Colonel"));
 
 export const server = () => {
     const Colonel = new Kernel(webRouter, [], {
@@ -24,7 +29,7 @@ export const server = () => {
 
             return controller;
         }
-    });
+    }, container);
     const PORT = Number(process.env.PORT) || 5000;
     
     console.log(`Server running at http://localhost:${PORT}/`);
