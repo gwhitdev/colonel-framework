@@ -1,23 +1,24 @@
 import type { RouteDefinitionInterface } from './interfaces/RouteDefinitionInterface';
 import type { RouteMatchInterface } from './interfaces/RouteMatchInterface';
 import type { HttpMethod } from './types/HttpMethod';
+import type { RouteHandler } from './types/RouteHandler';
 
 export class Router {
     private routes: RouteDefinitionInterface[] = [];
 
-    get(path: string, handler: string) {
+    get(path: string, handler: RouteHandler) {
         this.add("GET", path, handler);
     }
 
-    post(path: string, handler: string) {
+    post(path: string, handler: RouteHandler) {
         this.add("POST", path, handler);
     }
 
-    put(path: string, handler: string) {
+    put(path: string, handler: RouteHandler) {
         this.add("PUT", path, handler);
     }
 
-    delete(path: string, handler: string) {
+    delete(path: string, handler: RouteHandler) {
         this.add("DELETE", path, handler);
     }
 
@@ -33,7 +34,7 @@ export class Router {
         return null;
     }
 
-    add(method: HttpMethod, path: string, handler: string): void {
+    add(method: HttpMethod, path: string, handler: RouteHandler): void {
         this.routes.push({ method, path, handler });
     }
 

@@ -89,6 +89,11 @@ export class Kernel {
         
         req.setParams(route.params);
 
+        // Allows functional routes
+        if (typeof route.handler === "function") {
+            return route.handler(req);
+        }
+
         const parts: string[] = route.handler.split("@");
 
         if (parts.length !== 2) {
