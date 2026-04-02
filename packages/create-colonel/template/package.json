@@ -7,7 +7,7 @@
     "start": "bun --watch src/index.ts"
   },
   "dependencies": {
-    "@coloneldev/framework": "^0.1.0",
+    "@coloneldev/framework": "^0.1.1",
     "ejs": "^5.0.1"
   },
   "devDependencies": {
