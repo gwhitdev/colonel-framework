@@ -1,8 +1,8 @@
-import { Kernel } from "@colonel/framework";
+import { Kernel } from "@coloneldev/framework";
 import webRouter  from "../config/routes/web";
 import { existsSync } from "fs";
 import { extensions } from "../config/acceptedStaticContentTypes";
-import { isStaticPath, contentTypeFor, toPublicFilePath } from "@colonel/framework";
+import { isStaticPath, contentTypeFor, toPublicFilePath } from "@coloneldev/framework";
 import { staticPaths } from "../config/staticPaths";
 import path, { extname } from "path";
 

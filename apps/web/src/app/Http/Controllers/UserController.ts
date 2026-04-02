@@ -1,4 +1,4 @@
-import type { HttpRequest } from "@colonel/framework";
+import type { HttpRequest } from "@coloneldev/framework";
 import Controller from "./Controller";
 
 

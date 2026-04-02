@@ -12,8 +12,8 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
-      "@colonel/framework": ["packages/framework/src/index.ts"],
-      "@colonel/framework/*": ["packages/framework/src/*"],
+      "@coloneldev/framework": ["packages/framework/src/index.ts"],
+      "@coloneldev/framework/*": ["packages/framework/src/*"],
       "@app/*": ["apps/web/src/*"]
     },
     "allowImportingTsExtensions": true,

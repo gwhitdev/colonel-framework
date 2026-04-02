@@ -31,7 +31,7 @@ packageJson.name = basename(targetDir);
 
 const localFrameworkPath = resolve(import.meta.dir, "..", "..", "framework");
 if (existsSync(resolve(localFrameworkPath, "package.json"))) {
-    packageJson.dependencies["@colonel/framework"] = `file:${localFrameworkPath}`;
+    packageJson.dependencies["@coloneldev/framework"] = `file:${localFrameworkPath}`;
 }
 
 writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);

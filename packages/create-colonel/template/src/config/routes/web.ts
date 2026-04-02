@@ -1,4 +1,4 @@
-import { Router, redirect } from '@colonel/framework';
+import { Router, redirect } from '@coloneldev/framework';
 
 const web = new Router();
 

@@ -19,18 +19,25 @@
       "name": "@colonel/web",
       "version": "0.1.0",
       "dependencies": {
-        "@colonel/framework": "workspace:*",
+        "@coloneldev/framework": "workspace:*",
+      },
+    },
+    "packages/create-colonel": {
+      "name": "create-colonel",
+      "version": "0.1.0",
+      "bin": {
+        "create-colonel": "./src/cli.ts",
       },
     },
     "packages/framework": {
-      "name": "@colonel/framework",
+      "name": "@coloneldev/framework",
       "version": "0.1.0",
     },
   },
   "packages": {
-    "@colonel/framework": ["@colonel/framework@workspace:packages/framework"],
-
     "@colonel/web": ["@colonel/web@workspace:apps/web"],
+
+    "@coloneldev/framework": ["@coloneldev/framework@workspace:packages/framework"],
 
     "@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
 
@@ -39,6 +46,8 @@
     "@types/node": ["@types/node@25.5.0", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw=="],
 
     "bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
+
+    "create-colonel": ["create-colonel@workspace:packages/create-colonel"],
 
     "ejs": ["ejs@5.0.1", "", { "bin": { "ejs": "bin/cli.js" } }, "sha512-COqBPFMxuPTPspXl2DkVYaDS3HtrD1GpzOGkNTJ1IYkifq/r9h8SVEFrjA3D9/VJGOEoMQcrlhpntcSUrM8k6A=="],
 
