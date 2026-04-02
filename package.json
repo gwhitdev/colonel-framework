@@ -8,7 +8,10 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "bun --watch apps/web/src/index.ts"
+    "start": "bun --watch apps/web/src/index.ts",
+    "sync-framework-template": "bun scripts/sync-framework-template.ts",
+    "upgrade-web:from-template": "bun scripts/upgrade-web-from-template.ts",
+    "upgrade-web:from-template:apply": "bun scripts/upgrade-web-from-template.ts --upgrade"
   },
   "devDependencies": {
     "@types/bun": "latest",
