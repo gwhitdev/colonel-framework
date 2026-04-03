@@ -1,7 +1,10 @@
 import Controller from './Controller';
+import { AppInfoService } from '../../Services/AppInfoService';
 
 export class AppController extends Controller {
-    constructor() {
+    static inject = [AppInfoService];
+
+    constructor(private appInfoService: AppInfoService) {
         super();
     }
 
@@ -9,7 +12,7 @@ export class AppController extends Controller {
         return [
             'base/index',
             {
-                "titleData": "Welcome",
+                "titleData": this.appInfoService.welcomeTitle(),
                 
             },
         ]

@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun --watch src/index.ts"
+    "start": "bun --watch src/index.ts",
+    "upgrade:colonel": "bun add @coloneldev/framework@latest"
   },
   "dependencies": {
     "@coloneldev/framework": "^0.1.2",

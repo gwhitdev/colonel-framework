@@ -14,7 +14,7 @@
     "paths": {
       "@coloneldev/framework": ["packages/framework/src/index.ts"],
       "@coloneldev/framework/*": ["packages/framework/src/*"],
-      "@app/*": ["apps/web/src/*"]
+      "@app/*": ["examples/web/src/*"]
     },
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,

@@ -2,6 +2,11 @@
 
 Scaffold a new Colonel app from the command line.
 
+[![npm version](https://img.shields.io/npm/v/create-colonel)](https://www.npmjs.com/package/create-colonel)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](../../LICENSE)
+[![Runtime: Bun](https://img.shields.io/badge/runtime-bun-black)](https://bun.sh)
+[![Template](https://img.shields.io/badge/template-included-2F6FED)](template)
+
 ## Usage
 
 ```bash
@@ -44,6 +49,18 @@ bun packages/create-colonel/src/cli.ts my-app
 ```
 
 When run inside this repository, the CLI auto-links the local framework package for easier development.
+
+## Tests
+
+There are no dedicated automated tests for this package yet.
+
+Recommended smoke test from repository root:
+
+```bash
+rm -rf /tmp/colonel-smoke && bun packages/create-colonel/src/cli.ts /tmp/colonel-smoke
+cd /tmp/colonel-smoke
+bun run start
+```
 
 ## Publishing
 

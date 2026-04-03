@@ -15,7 +15,7 @@
         "typescript": "^5",
       },
     },
-    "apps/web": {
+    "examples/web": {
       "name": "@colonel/web",
       "version": "0.1.0",
       "dependencies": {
@@ -24,18 +24,18 @@
     },
     "packages/create-colonel": {
       "name": "create-colonel",
-      "version": "0.1.0",
+      "version": "0.1.4",
       "bin": {
         "create-colonel": "./src/cli.ts",
       },
     },
     "packages/framework": {
       "name": "@coloneldev/framework",
-      "version": "0.1.0",
+      "version": "0.1.3",
     },
   },
   "packages": {
-    "@colonel/web": ["@colonel/web@workspace:apps/web"],
+    "@colonel/web": ["@colonel/web@workspace:examples/web"],
 
     "@coloneldev/framework": ["@coloneldev/framework@workspace:packages/framework"],
 
