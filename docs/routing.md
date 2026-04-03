@@ -19,6 +19,15 @@ You can also use inline functions:
 web.get('/health', () => new Response('OK', { status: 200 }));
 ```
 
+## Grouped routes
+
+```ts
+web.group('/users', (users) => {
+    users.get('/', 'UsersController@index');
+    users.get('/:id', 'UsersControllers@show');
+})
+```
+
 ## Path Parameters
 
 Named parameters are available through request params:
