@@ -28,6 +28,7 @@ These docs are written for:
 - [Views and Static Files](views-and-static.md)
 - [Sessions](sessions.md)
 - [CLI and Template Workflow](cli-and-template.md)
+- [Roadmap](roadmap.md)
 - [Extending Colonel](extending-colonel.md)
 
 ## GitHub Pages Setup
