@@ -1,13 +1,13 @@
 {
   "name": "colonel-app",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "private": true,
   "scripts": {
     "start": "bun --watch src/index.ts"
   },
   "dependencies": {
-    "@coloneldev/framework": "^0.1.1",
+    "@coloneldev/framework": "^0.1.2",
     "ejs": "^5.0.1"
   },
   "devDependencies": {

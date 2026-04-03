@@ -4,7 +4,7 @@ import type { HttpMethod } from './types/HttpMethod';
 import { join, resolve } from 'node:path';
 import ejs from 'ejs';
 import type { RouteHandler } from './types/RouteHandler';
-import type { Container } from '../Container/Container';
+import { Container } from '../Container/Container';
 
 
 type ControllerClass = new (...args: any[]) => object;

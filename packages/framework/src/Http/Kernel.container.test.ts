@@ -48,4 +48,24 @@ describe("Kernel container integration", () => {
         expect(response.status).toBe(200);
         expect(body).toEqual({ message: "resolved-via-container" });
     });
+
+    it("requires an explicit container at construction time", async () => {
+        const router = new Router();
+        router.get("/", "SimpleController@index");
+
+        class SimpleController {
+            index(): Response {
+                return new Response("ok", { status: 200 });
+            }
+        }
+
+        const kernel = new Kernel(router, [], {
+            controllerResolver: async () => SimpleController,
+        }, new Container());
+
+        const response = await kernel.handle(new Request("http://localhost/"));
+
+        expect(response.status).toBe(200);
+        expect(await response.text()).toBe("ok");
+    });
 });
