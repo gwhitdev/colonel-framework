@@ -13,7 +13,13 @@ const publicRoot = path.resolve(import.meta.dir, "..", "..", "public");
 const controllerRoot = path.resolve(import.meta.dir, "..", "app", "Http", "Controllers");
 const container = new Container();
 
-container.singleton(AppInfoService, () => new AppInfoService(process.env.appName ?? "Colonel"));
+container.singleton(
+    AppInfoService,
+    () => new AppInfoService(
+        process.env.appName ?? "Colonel",
+        process.env.COLONEL_DOCS_URL ?? "https://<your-user>.github.io/colonel/"
+    )
+);
 
 export const server = () => {
     const Colonel = new Kernel(webRouter, [], {

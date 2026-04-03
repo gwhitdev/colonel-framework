@@ -14,6 +14,7 @@ Colonel is a TypeScript-first web framework running on Bun, with a minimal HTTP 
 - [packages/framework](packages/framework) core runtime package published as `@coloneldev/framework`
 - [packages/create-colonel](packages/create-colonel) project scaffolder published as `create-colonel`
 - [examples/web](examples/web) reference application and integration example
+- [docs](docs) GitHub Pages-ready documentation site
 
 ## Local Development
 
@@ -30,6 +31,12 @@ bun run start
 ```
 
 Open http://localhost:5000.
+
+To link apps to published docs, set:
+
+```bash
+export COLONEL_DOCS_URL="https://<your-user>.github.io/colonel/"
+```
 
 ## Tests
 

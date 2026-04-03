@@ -1,0 +1,17 @@
+title: Colonel Documentation
+description: Opinionated guide to building and extending apps with Colonel
+baseurl: "/colonel-framework"
+url: "https://gwhitdev.github.io"
+theme: minima
+markdown: kramdown
+kramdown:
+  input: GFM
+header_pages:
+  - getting-started.md
+  - architecture.md
+  - routing.md
+  - controllers-and-di.md
+  - views-and-static.md
+  - sessions.md
+  - cli-and-template.md
+  - extending-colonel.md

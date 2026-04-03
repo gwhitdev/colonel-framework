@@ -18,6 +18,7 @@ export class AppController extends Controller {
             'base/index',
             {
                 "titleData": this.appInfoService.welcomeTitle(),
+                "docsUrl": this.appInfoService.documentationUrl(),
                 "footerData": `Session visits: ${visits}`,
             },
         ]
