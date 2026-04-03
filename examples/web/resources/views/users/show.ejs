@@ -1,19 +1,18 @@
 <section class="surface">
     <div class="kicker">COLONEL // USERS</div>
-    <h1>Registered Users</h1>
+    <h1><%= user.name %></h1>
     <p class="lead">This page is served through grouped routes and rendered with the shared base layout.</p>
 
-    <ul class="list">
-        <% users.forEach(user => { %>
+    <ul class="list" style="list-style-type: none;">
             <li>
-                <strong><%= user.name %></strong><br>
-                <span><%= user.email %></span>
+                <strong>Name: <%= user.name %></strong><br>
             </li>
-        <% }); %>
+            <li>
+                <span>Email: <%= user.email || 'Not provided' %></span>
+            </li>
     </ul>
 
     <div class="cta">
         <a class="btn btn-secondary" href="/">Back Home</a>
-        <a class="btn btn-primary" href="/users/1">View User #1</a>
     </div>
 </section>

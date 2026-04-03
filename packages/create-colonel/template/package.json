@@ -1,6 +1,6 @@
 {
   "name": "colonel-app",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
     "upgrade:colonel": "bun add @coloneldev/framework@latest"
   },
   "dependencies": {
-    "@coloneldev/framework": "^0.1.5",
+    "@coloneldev/framework": "^0.1.6",
     "ejs": "^5.0.1"
   },
   "devDependencies": {

@@ -4,10 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.png" sizes="any">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+        :root {
+            --ink: #0d1310;
+            --ink-soft: #203329;
+            --canvas: #f3f1e9;
+            --accent: #b8441a;
+            --accent-soft: #db7c31;
+            --panel: #ffffff;
+            --olive: #5e6a39;
+            --line: #d8d3c7;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: radial-gradient(circle at 80% 10%, #f8e6c7 0%, var(--canvas) 38%, #ede8da 100%);
+            color: var(--ink);
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+        }
+
+        .page-shell {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 2rem 1rem 3rem;
+        }
+
+        .surface {
+            border: 1px solid var(--line);
+            background: linear-gradient(125deg, #fffdf8 0%, #f6f3e9 100%);
+            border-radius: 22px;
+            padding: 2.2rem;
+            box-shadow: 0 16px 45px rgba(32, 51, 41, 0.09);
+            animation: rise 0.65s ease;
+        }
+
+        .kicker {
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 0.1em;
+            font-size: 0.74rem;
+            color: var(--olive);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.8rem);
+            line-height: 1.03;
+            margin: 0;
+            max-width: 16ch;
+        }
+
+        .lead {
+            margin-top: 1rem;
+            font-size: 1.04rem;
+            color: var(--ink-soft);
+            max-width: 65ch;
+        }
+
+        .cta {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.4rem;
+        }
+
+        .btn {
+            text-decoration: none;
+            padding: 0.72rem 1.05rem;
+            border-radius: 999px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            border-color: var(--line);
+            color: var(--ink);
+            background: #fff;
+        }
+
+        .meta {
+            margin-top: 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.78rem;
+            color: #4f5e54;
+        }
+
+        .grid {
+            margin-top: 1.25rem;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.8rem;
+        }
+
+        .tile {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 0.95rem;
+        }
+
+        .tile strong {
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        .tile p {
+            margin: 0;
+            color: var(--ink-soft);
+            font-size: 0.94rem;
+        }
+
+        .list {
+            margin-top: 1rem;
+            padding-left: 1.1rem;
+        }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 840px) {
+            .surface { padding: 1.35rem; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
     <%- title %>
 </head>
 <body>
-    <%- body %>
+    <main class="page-shell">
+        <%- body %>
+        <%- footer %>
+    </main>
 </body>
-    <%- footer %>
 </html>

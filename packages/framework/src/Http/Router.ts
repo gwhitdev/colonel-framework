@@ -5,21 +5,39 @@ import type { RouteHandler } from './types/RouteHandler';
 
 export class Router {
     private routes: RouteDefinitionInterface[] = [];
+    private prefixStack: string[] = [];
 
     get(path: string, handler: RouteHandler) {
         this.add("GET", path, handler);
+        return this;
     }
 
     post(path: string, handler: RouteHandler) {
         this.add("POST", path, handler);
+        return this;
     }
 
     put(path: string, handler: RouteHandler) {
         this.add("PUT", path, handler);
+        return this;
     }
 
     delete(path: string, handler: RouteHandler) {
         this.add("DELETE", path, handler);
+        return this;
+    }
+
+    group(prefix: string, callback: (router: Router) => void): this {
+        const normalizedPrefix = this.normalizePath(prefix);
+        this.prefixStack.push(normalizedPrefix);
+
+        try {
+            callback(this);
+        } finally {
+            this.prefixStack.pop();
+        }
+
+        return this;
     }
 
     match(method: HttpMethod, requestPath: string): RouteMatchInterface | null {
@@ -35,7 +53,23 @@ export class Router {
     }
 
     add(method: HttpMethod, path: string, handler: RouteHandler): void {
-        this.routes.push({ method, path, handler });
+        this.routes.push({ method, path: this.withGroupPrefix(path), handler });
+    }
+
+    private withGroupPrefix(path: string): string {
+        const normalizedPath = this.normalizePath(path);
+        const activePrefix = this.prefixStack.join("");
+
+        if (!activePrefix) {
+            return normalizedPath;
+        }
+
+        return this.normalizePath(`${activePrefix}${normalizedPath}`);
+    }
+
+    private normalizePath(path: string): string {
+        const cleaned = (`/${path}`).replace(/\/+/g, "/").replace(/\/$/, "");
+        return cleaned === "" ? "/" : cleaned;
     }
 
     private matchPath(routePath: string, requestPath: string): Record<string, string> | null {

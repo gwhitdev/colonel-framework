@@ -6,14 +6,26 @@ export class UserController extends Controller {
     index(): Array<string | Record<string, any>> {
         return [
             'users/index',
-            { users: [{ id: 1, name: "John Doe" }, { id: 2, name: "Jane Doe" }] }
+            {
+                users: [
+                    { id: 1, name: "John Doe", email: "john@example.com" },
+                    { id: 2, name: "Jane Doe", email: "jane@example.com" }
+                ]
+            }
         ]}
 
-    show(req: HttpRequest): Record<string, string> {
+    show(req: HttpRequest): Array<string | Record<string, any>> {
         const id = req.params("id");
        
-        return {
-            "message": `Hello from UserController@show with id ${id}`
-        }
+        return [
+            'users/show',
+            {
+                user: {
+                    id,
+                    name: `User ${id}`,
+                    email: `user${id}@example.com`
+                }
+            }
+        ]
     }
 }   
