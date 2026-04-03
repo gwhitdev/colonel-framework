@@ -1,7 +1,7 @@
 export class AppInfoService {
     constructor(
         private appName: string,
-        private docsUrl: string = "https://<your-user>.github.io/colonel/"
+        private docsUrl: string = "https://gwhitdev.github.io/colonel-framework/"
     ) {}
 
     welcomeTitle(): string {

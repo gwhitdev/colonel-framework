@@ -35,7 +35,7 @@ Open http://localhost:5000.
 To link apps to published docs, set:
 
 ```bash
-export COLONEL_DOCS_URL="https://<your-user>.github.io/colonel/"
+export COLONEL_DOCS_URL="https://gwhitdev.github.io/colonel-framework/"
 ```
 
 ## Tests

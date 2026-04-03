@@ -17,7 +17,7 @@ container.singleton(
     AppInfoService,
     () => new AppInfoService(
         process.env.appName ?? "Colonel",
-        process.env.COLONEL_DOCS_URL ?? "https://<your-user>.github.io/colonel/"
+        process.env.COLONEL_DOCS_URL ?? "https://gwhitdev.github.io/colonel-framework/"
     )
 );
 

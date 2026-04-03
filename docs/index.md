@@ -41,4 +41,4 @@ This docs section is ready for GitHub Pages from the docs directory.
 
 Once published, docs are available at:
 
-https://<your-user>.github.io/colonel/
+https://gwhitdev.github.io/colonel-framework/
