@@ -5,7 +5,7 @@ create-colonel scaffolds a full app from the template directory.
 ## Generate a Project
 
 ```bash
-bun create colonel my-app
+bunx create-colonel my-app
 ```
 
 ## What Gets Generated

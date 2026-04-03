@@ -14,7 +14,7 @@ curl -fsSL https://bun.sh/install | bash
 ## Create a New App
 
 ```bash
-bun create colonel my-app
+bunx create-colonel my-app
 cd my-app
 bun install
 bun run start

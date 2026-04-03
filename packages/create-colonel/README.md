@@ -10,15 +10,7 @@ Scaffold a new Colonel app from the command line.
 ## Usage
 
 ```bash
-bun create colonel my-app
-```
-
-Alternative entry points:
-
-```bash
 bunx create-colonel my-app
-npx create-colonel my-app
-npm create colonel@latest my-app
 ```
 
 Then run your new app:

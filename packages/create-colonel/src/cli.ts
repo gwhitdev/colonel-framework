@@ -6,7 +6,7 @@ import { basename, resolve } from "node:path";
 const targetArg = process.argv[2];
 
 if (!targetArg) {
-    console.error("Usage: bun create colonel <project-name>");
+    console.error("Usage: bunx create-colonel <project-name>");
     process.exit(1);
 }
 
