@@ -26,6 +26,7 @@ The package currently exports framework primitives from the root entry:
 - `Kernel`
 - `Router`
 - `HttpRequest`
+- `Session` and `InMemorySessionStore`
 - `redirect`
 - static file helpers (`isStaticPath`, `toPublicFilePath`, `contentTypeFor`)
 

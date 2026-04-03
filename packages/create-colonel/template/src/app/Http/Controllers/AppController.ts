@@ -1,3 +1,4 @@
+import type { HttpRequest } from "@coloneldev/framework";
 import Controller from './Controller';
 import { AppInfoService } from '../../Services/AppInfoService';
 
@@ -8,12 +9,16 @@ export class AppController extends Controller {
         super();
     }
 
-    index(): Record<string, any> {
+    index(req: HttpRequest): Record<string, any> {
+        const previousVisits = this.sessionGet<number>(req, "visits") ?? 0;
+        const visits = previousVisits + 1;
+        this.sessionPut(req, "visits", visits);
+
         return [
             'base/index',
             {
                 "titleData": this.appInfoService.welcomeTitle(),
-                
+                "footerData": `Session visits: ${visits}`,
             },
         ]
     }

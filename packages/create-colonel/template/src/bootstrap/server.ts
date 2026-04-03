@@ -18,6 +18,9 @@ container.singleton(AppInfoService, () => new AppInfoService(process.env.appName
 export const server = () => {
     const Colonel = new Kernel(webRouter, [], {
         viewsRoot,
+        session: {
+            enabled: true,
+        },
         controllerResolver: async (name: string) => {
             const modulePath = `${controllerRoot}/${name}.ts`;
             const mod = await import(modulePath);

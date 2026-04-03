@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import ejs from 'ejs';
 import type { RouteHandler } from './types/RouteHandler';
 import { Container } from '../Container/Container';
+import { InMemorySessionStore, Session, type SessionStore } from './Session';
 
 
 type ControllerClass = new (...args: any[]) => object;
@@ -13,6 +14,12 @@ type ControllerResolver = (name: string) => Promise<ControllerClass>;
 interface KernelOptions {
     controllerResolver?: ControllerResolver;
     viewsRoot?: string;
+    session?: {
+        enabled?: boolean;
+        cookieName?: string;
+        ttlSeconds?: number;
+        store?: SessionStore;
+    };
 }
 
 type ViewPayload = [
@@ -35,7 +42,43 @@ const isViewPayload = (value: any): value is ViewPayload => {
 
 const safeViewPath = (view: string) => view.replace(/\.\./g, '').replace(/\/+/g, '/');
 
+type SessionContext = {
+    session: Session;
+    cookieName: string;
+    ttlSeconds: number;
+};
+
+const parseCookies = (headerValue: string | null): Record<string, string> => {
+    if (!headerValue) {
+        return {};
+    }
+
+    return headerValue
+        .split(';')
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+        .reduce<Record<string, string>>((acc, chunk) => {
+            const [name, ...rest] = chunk.split('=');
+            if (!name || rest.length === 0) {
+                return acc;
+            }
+
+            acc[name] = decodeURIComponent(rest.join('='));
+            return acc;
+        }, {});
+};
+
+const createSessionId = (): string => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
 export class Kernel {
+    private readonly defaultSessionStore = new InMemorySessionStore();
+
     constructor(
         private router = new Router(),
         private middleware: Array<Function> = [],
@@ -60,12 +103,14 @@ export class Kernel {
      */
     async handle(request: Request): Promise<Response> {
         const url = new URL(request.url);
+        const sessionContext = await this.initializeSession(request.headers);
         const httpRequest = new HttpRequest({
             method: request.method,
             url: url,
             headers: request.headers,
             query: url.searchParams,
-            body: await request.json().catch(() => null)
+            body: await request.json().catch(() => null),
+            session: sessionContext?.session,
         });
 
         try {
@@ -74,11 +119,69 @@ export class Kernel {
                 return this.dispatchToRouter(httpRequest)
             });
 
-            return await this.normalizeResponse(response);
+            const normalizedResponse = await this.normalizeResponse(response);
+            return await this.commitSession(normalizedResponse, sessionContext);
         } catch (error) {
             console.error(error);
             return this.handleException("Middleware couldn't process the request", 500);
         }
+    }
+
+    private async initializeSession(headers: Headers): Promise<SessionContext | null> {
+        const sessionOptions = this.options.session;
+        if (!sessionOptions?.enabled) {
+            return null;
+        }
+
+        const cookieName = sessionOptions.cookieName ?? 'colonel.sid';
+        const ttlSeconds = sessionOptions.ttlSeconds ?? 60 * 60 * 24 * 7;
+        const store = sessionOptions.store ?? this.defaultSessionStore;
+
+        const cookieMap = parseCookies(headers.get('cookie'));
+        const incomingSessionId = cookieMap[cookieName];
+
+        if (incomingSessionId) {
+            const existingPayload = await store.get(incomingSessionId);
+            if (existingPayload) {
+                return {
+                    session: new Session(incomingSessionId, existingPayload, store, ttlSeconds, false),
+                    cookieName,
+                    ttlSeconds,
+                };
+            }
+        }
+
+        return {
+            session: new Session(createSessionId(), {}, store, ttlSeconds, true),
+            cookieName,
+            ttlSeconds,
+        };
+    }
+
+    private async commitSession(response: Response, sessionContext: SessionContext | null): Promise<Response> {
+        if (!sessionContext) {
+            return response;
+        }
+
+        const { session, cookieName, ttlSeconds } = sessionContext;
+        await session.persist();
+
+        if (!session.shouldCommit()) {
+            return response;
+        }
+
+        const setCookieValue = session.isInvalidated()
+            ? `${cookieName}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`
+            : `${cookieName}=${encodeURIComponent(session.id)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${ttlSeconds}`;
+
+        const headers = new Headers(response.headers);
+        headers.append('Set-Cookie', setCookieValue);
+
+        return new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers,
+        });
     }
 
     /**

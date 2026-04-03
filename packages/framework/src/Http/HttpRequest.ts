@@ -1,4 +1,5 @@
 import type { HttpRequestProps } from "./interfaces/HttpRequestPropsInterface";
+import type { Session } from "./Session";
 
 export class HttpRequest {
     readonly method: string;
@@ -6,6 +7,7 @@ export class HttpRequest {
     readonly headers: Headers;
     readonly query: URLSearchParams;
     readonly body: unknown;
+    readonly session?: Session;
     private _params: Record<string, string> = {};
 
     constructor (props: HttpRequestProps) {
@@ -14,6 +16,7 @@ export class HttpRequest {
         this.headers = props.headers;
         this.query = props.query;
         this.body = props.body;
+        this.session = props.session;
     }
 
     json <T = any>(): T | null {
