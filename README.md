@@ -63,6 +63,14 @@ cd my-app
 bun run start
 ```
 
+## Upgrade An Existing App
+
+Inside a generated Colonel app, upgrade to the latest published framework with:
+
+```bash
+bun run upgrade:colonel
+```
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
