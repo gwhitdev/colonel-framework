@@ -7,7 +7,7 @@ import { stdin as input, stdout as output } from "node:process";
 
 type TelemetryConsent = "yes" | "no";
 
-const DEFAULT_TELEMETRY_ENDPOINT = "https://colonel-telemetery.vercel.app/api/ingest";
+const DEFAULT_TELEMETRY_ENDPOINT = "https://colonel-telemetry.vercel.app/api/ingest";
 
 const deriveProvisionEndpoint = (ingestEndpoint: string, publicProvision = false): string => {
     const suffix = publicProvision ? "/api/provision-public" : "/api/provision-app";
@@ -17,6 +17,22 @@ const deriveProvisionEndpoint = (ingestEndpoint: string, publicProvision = false
     }
 
     return `${ingestEndpoint.replace(/\/$/, "")}${suffix}`;
+};
+
+const deriveScaffoldEndpoint = (ingestEndpoint: string): string => {
+    if (ingestEndpoint.endsWith("/api/ingest")) {
+        return `${ingestEndpoint.slice(0, -"/api/ingest".length)}/api/scaffold-created`;
+    }
+
+    return `${ingestEndpoint.replace(/\/$/, "")}/api/scaffold-created`;
+};
+
+const derivePublicPageUrl = (ingestEndpoint: string, pagePath: "/privacy" | "/opt-out"): string => {
+    if (ingestEndpoint.endsWith("/api/ingest")) {
+        return `${ingestEndpoint.slice(0, -"/api/ingest".length)}${pagePath}`;
+    }
+
+    return `${ingestEndpoint.replace(/\/$/, "")}${pagePath}`;
 };
 
 const upsertEnv = (content: string, key: string, value: string): string => {
@@ -68,6 +84,23 @@ const trackScaffoldEvent = async (payload: Record<string, unknown>, endpoint: st
     }
 };
 
+const pingScaffoldCreated = async (endpoint: string, optedIn: boolean): Promise<void> => {
+    try {
+        await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                source: "create-colonel",
+                optedIn,
+            }),
+        });
+    } catch {
+        // Do not block scaffolding on telemetry transport failures.
+    }
+};
+
 const provisionTelemetryApp = async (
     appName: string,
     source: string,
@@ -105,10 +138,10 @@ const askTelemetryConsent = async (): Promise<TelemetryConsent> => {
     }
 
     const rl = createInterface({ input, output });
-    const answer = await rl.question("Share anonymous usage stats to help improve Colonel? (y/N): ");
+    const answer = await rl.question("Share anonymous usage stats to help improve Colonel? (Y/n): ");
     rl.close();
 
-    return normalizeConsent(answer) ?? "no";
+    return normalizeConsent(answer) ?? "yes";
 };
 
 const configureTelemetryEnv = (
@@ -143,9 +176,14 @@ const publicProvisionEndpoint = parseOptionValue(args, "--telemetry-public-provi
     ?? deriveProvisionEndpoint(telemetryEndpoint, true);
 const provisionToken = parseOptionValue(args, "--telemetry-provision-token")
     ?? process.env.COLONEL_TELEMETRY_PROVISION_TOKEN;
+const scaffoldCreatedEndpoint = parseOptionValue(args, "--telemetry-scaffold-endpoint")
+    ?? process.env.COLONEL_TELEMETRY_SCAFFOLD_ENDPOINT
+    ?? deriveScaffoldEndpoint(telemetryEndpoint);
+const privacyNoticeUrl = derivePublicPageUrl(telemetryEndpoint, "/privacy");
+const telemetryOptOutUrl = derivePublicPageUrl(telemetryEndpoint, "/opt-out");
 
 if (showHelp) {
-    console.log("Usage: bunx create-colonel <project-name> [--skip-install] [--telemetry yes|no] [--telemetry-endpoint <url>] [--telemetry-provision-endpoint <url>] [--telemetry-public-provision-endpoint <url>] [--telemetry-provision-token <token>]");
+    console.log("Usage: bunx create-colonel <project-name> [--skip-install] [--telemetry yes|no] [--telemetry-endpoint <url>] [--telemetry-provision-endpoint <url>] [--telemetry-public-provision-endpoint <url>] [--telemetry-provision-token <token>] [--telemetry-scaffold-endpoint <url>]");
     console.log("\nOptions:");
     console.log("  --skip-install    Scaffold files without running bun install");
     console.log("  --telemetry       Set anonymous telemetry consent without interactive prompt");
@@ -153,11 +191,12 @@ if (showHelp) {
     console.log("  --telemetry-provision-endpoint  Override telemetry app provisioning endpoint");
     console.log("  --telemetry-public-provision-endpoint  Override public app provisioning endpoint");
     console.log("  --telemetry-provision-token  Bearer token used for telemetry app provisioning");
+    console.log("  --telemetry-scaffold-endpoint  Override scaffold-created ping endpoint");
     process.exit(0);
 }
 
 if (!targetArg) {
-    console.error("Usage: bunx create-colonel <project-name> [--skip-install] [--telemetry yes|no] [--telemetry-endpoint <url>] [--telemetry-provision-endpoint <url>] [--telemetry-public-provision-endpoint <url>] [--telemetry-provision-token <token>]");
+    console.error("Usage: bunx create-colonel <project-name> [--skip-install] [--telemetry yes|no] [--telemetry-endpoint <url>] [--telemetry-provision-endpoint <url>] [--telemetry-public-provision-endpoint <url>] [--telemetry-provision-token <token>] [--telemetry-scaffold-endpoint <url>]");
     process.exit(1);
 }
 
@@ -193,6 +232,7 @@ if (existsSync(resolve(localFrameworkPath, "package.json"))) {
 writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
 const consent = telemetryConsentFromFlag ?? await askTelemetryConsent();
+await pingScaffoldCreated(scaffoldCreatedEndpoint, consent === "yes");
 let provisionedAppId: string | undefined;
 let provisionedIngestKey: string | undefined;
 
@@ -240,6 +280,11 @@ if (consent === "yes" && provisionedAppId && provisionedIngestKey) {
         skipInstall,
         template: "create-colonel",
     }, telemetryEndpoint, provisionedAppId, provisionedIngestKey);
+}
+
+if (consent === "yes") {
+    console.log(`Telemetry privacy notice: ${privacyNoticeUrl}`);
+    console.log(`Telemetry opt-out page: ${telemetryOptOutUrl}`);
 }
 
 console.log("\nColonel app created successfully.\n");

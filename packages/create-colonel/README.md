@@ -53,6 +53,16 @@ When telemetry is enabled and provisioning succeeds, the scaffolded `.env` recei
 - `COLONEL_TELEMETRY_APP_ID`
 - `COLONEL_TELEMETRY_KEY`
 
+Regardless of telemetry consent, create-colonel sends a lightweight scaffold-created ping so telemetry can maintain:
+
+- total app scaffolds
+- total telemetry opt-outs
+
+When telemetry consent is `yes`, create-colonel prints links to:
+
+- telemetry privacy notice (`/privacy`)
+- telemetry opt-out page (`/opt-out`)
+
 Use `--skip-install` when you only want scaffolded files and prefer to install dependencies later.
 
 Then run your new app:
