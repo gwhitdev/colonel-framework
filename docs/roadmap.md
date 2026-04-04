@@ -2,6 +2,13 @@
 
 This plan is ordered to get Colonel from a solid beta-style core to a stable first 1.0 release. Each milestone has clear dependencies and a practical exit criterion.
 
+## Status
+
+- Milestone 1: Completed
+- Milestone 2: Completed
+- Milestone 3: Completed
+- Milestone 4: Completed
+
 ## Milestone 1: Core HTTP Stability
 
 Goal: finish the request lifecycle so the framework has a predictable, production-ready HTTP surface.
@@ -73,7 +80,7 @@ Tasks:
 
 - Review the public export surface and remove or document anything experimental.
 - Document the supported routing, controller, session, and view conventions as stable.
-- Decide whether middleware examples belong in the scaffolded app before 1.0.
+- Keep middleware examples in the scaffolded app before 1.0 (decision: yes).
 - Verify the example app matches the generated template behavior.
 
 Depends on:

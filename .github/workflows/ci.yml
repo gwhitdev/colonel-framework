@@ -34,3 +34,6 @@ jobs:
 
       - name: Scaffold Command Consistency
         run: bun run test:commands
+
+      - name: Public API Surface
+        run: bun run test:api-surface

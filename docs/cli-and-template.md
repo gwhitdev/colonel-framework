@@ -13,6 +13,7 @@ bunx create-colonel my-app
 - Server bootstrap
 - Route config
 - Controllers + base controller
+- Middleware examples (JSON write guard + trace header)
 - Service example
 - EJS views
 - Upgrade script for framework dependency

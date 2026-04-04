@@ -21,14 +21,18 @@ npm install @coloneldev/framework
 
 ## Exports
 
-The package currently exports framework primitives from the root entry:
+The package exports stable framework primitives from the root entry:
 
 - `Kernel`
 - `Router`
 - `HttpRequest`
+- response helpers (`text`, `html`, `json`, `redirect`, `badRequest`, `notFound`, `unprocessableEntity`, `internalServerError`)
+- error primitives (`HttpException`, `ValidationError`)
 - `Session` and `InMemorySessionStore`
-- `redirect`
 - static file helpers (`isStaticPath`, `toPublicFilePath`, `contentTypeFor`)
+- `Container`
+
+For detailed 1.x stability guarantees, see [docs/stable-api.md](../../docs/stable-api.md).
 
 ## Example
 
