@@ -41,6 +41,7 @@ The package exports stable framework primitives from the root entry:
 - error primitives (`HttpException`, `ValidationError`)
 - `Session` and `InMemorySessionStore`
 - static file helpers (`isStaticPath`, `toPublicFilePath`, `contentTypeFor`)
+- telemetry helpers (`TelemetryClient`, `createTelemetryClientFromEnv`)
 - `Container`
 
 For detailed 1.x stability guarantees, see [Stable API Contract](https://gwhitdev.github.io/colonel-framework/stable-api).
