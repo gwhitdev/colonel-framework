@@ -33,9 +33,15 @@ Use this checklist before publishing any Colonel release.
 2. Update template dependency range if needed.
 3. Publish `create-colonel`.
 4. Verify scaffold output with `bunx create-colonel my-app`.
+5. Create and push annotated tag (for example `v1.0.0`) on the publish commit.
 
 ## 6. Post-Publish Validation
 
 - Generate a fresh app with published packages.
 - Run `bun run start` and verify `/health` returns 200.
 - Verify docs links and starter commands still work as documented.
+
+## 7. Provenance And Notes
+
+- Confirm CI is green on the release commit and tag.
+- Publish release notes and changelog entry for the released version.

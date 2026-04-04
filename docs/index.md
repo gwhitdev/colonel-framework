@@ -29,7 +29,9 @@ These docs are written for:
 - [Sessions](sessions.md)
 - [CLI and Template Workflow](cli-and-template.md)
 - [Stable API Contract](stable-api.md)
+- [1.0 Release Notes](release-notes-1.0.md)
 - [Release Checklist](release-checklist.md)
+- [Support Policy](support-policy.md)
 - [Roadmap](roadmap.md)
 - [Extending Colonel](extending-colonel.md)
 

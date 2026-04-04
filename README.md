@@ -73,6 +73,15 @@ Inside a generated Colonel app, upgrade to the latest published framework with:
 bun run upgrade:colonel
 ```
 
+## Release Status
+
+Colonel now targets the stable `1.x` release line.
+
+- Stable API contract: [docs/stable-api.md](docs/stable-api.md)
+- 1.0 release notes: [docs/release-notes-1.0.md](docs/release-notes-1.0.md)
+- Support policy: [docs/support-policy.md](docs/support-policy.md)
+- Security policy: [SECURITY.md](SECURITY.md)
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
