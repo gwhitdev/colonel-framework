@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 type ReleaseArgs = {
-    runRelease: boolean;
+    target: "both" | "npm" | "gh" | "push";
     dryRun: boolean;
     notesFile: string;
     tag: string | null;
@@ -13,19 +13,37 @@ const repoRoot = resolve(import.meta.dir, "..");
 
 const parseArgs = (argv: string[]): ReleaseArgs => {
     const parsed: ReleaseArgs = {
-        runRelease: false,
+        target: "both",
         dryRun: false,
         notesFile: "docs/release-notes-1.0.md",
         tag: null,
         help: false,
     };
 
+    const setTarget = (next: "both" | "npm" | "gh" | "push"): void => {
+        if (parsed.target !== "both" && parsed.target !== next) {
+            throw new Error("Use only one publish target flag: --npm, --gh, or --push");
+        }
+
+        parsed.target = next;
+    };
+
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i];
         if (!arg) continue;
 
-        if (arg === "--r") {
-            parsed.runRelease = true;
+        if (arg === "--npm") {
+            setTarget("npm");
+            continue;
+        }
+
+        if (arg === "--gh") {
+            setTarget("gh");
+            continue;
+        }
+
+        if (arg === "--push") {
+            setTarget("push");
             continue;
         }
 
@@ -59,10 +77,12 @@ const usage = (): void => {
     console.log("Usage: bun scripts/release.ts [options]");
     console.log("");
     console.log("Default behavior:");
-    console.log("  Push current branch and release tag to GitHub.");
+    console.log("  Push current branch and release tag, create GitHub release, and publish npm packages.");
     console.log("");
     console.log("Options:");
-    console.log("  --r                  After push, create GitHub release and publish npm packages");
+    console.log("  --npm                Push, then publish npm packages only");
+    console.log("  --gh                 Push, then create GitHub release only");
+    console.log("  --push               Push current branch and release tag only");
     console.log("  --dry-run            Show actions without executing them");
     console.log("  --tag <vX.Y.Z>       Override release tag (default: v<framework-version>)");
     console.log("  --notes-file <path>  Notes file for GitHub release (default: docs/release-notes-1.0.md)");
@@ -169,34 +189,39 @@ if (!hasLocalTag) {
 
 run("git", ["push", "origin", releaseTag], { dryRun: args.dryRun });
 
-if (!args.runRelease) {
-    console.log("Push complete. Re-run with --r to also create GitHub release and publish npm packages.");
+if (args.target === "push") {
+    console.log("Push complete.");
     process.exit(0);
 }
 
-// Ensure gh is available and authenticated.
-run("gh", ["auth", "status"], { dryRun: args.dryRun });
+if (args.target === "both" || args.target === "gh") {
+    // Ensure gh is available and authenticated.
+    run("gh", ["auth", "status"], { dryRun: args.dryRun });
 
-const releaseExists = run("gh", ["release", "view", releaseTag], {
-    allowFailure: true,
-    dryRun: args.dryRun,
-}).ok;
+    const releaseExists = run("gh", ["release", "view", releaseTag], {
+        allowFailure: true,
+        dryRun: args.dryRun,
+    }).ok;
 
-if (!releaseExists) {
-    const ghArgs = ["release", "create", releaseTag, "--title", `Colonel ${framework.version}`];
+    if (!releaseExists) {
+        const ghArgs = ["release", "create", releaseTag, "--title", `Colonel ${framework.version}`];
 
-    if (existsSync(notesPath)) {
-        ghArgs.push("--notes-file", args.notesFile);
+        if (existsSync(notesPath)) {
+            ghArgs.push("--notes-file", args.notesFile);
+        } else {
+            ghArgs.push("--generate-notes");
+        }
+
+        run("gh", ghArgs, { dryRun: args.dryRun });
     } else {
-        ghArgs.push("--generate-notes");
+        console.log(`GitHub release ${releaseTag} already exists, skipping creation.`);
     }
-
-    run("gh", ghArgs, { dryRun: args.dryRun });
-} else {
-    console.log(`GitHub release ${releaseTag} already exists, skipping creation.`);
 }
 
-publishIfNeeded(resolve(repoRoot, "packages/framework"), framework.name, framework.version, args.dryRun);
-publishIfNeeded(resolve(repoRoot, "packages/create-colonel"), createColonel.name, createColonel.version, args.dryRun);
+if (args.target === "both" || args.target === "npm") {
+    publishIfNeeded(resolve(repoRoot, "packages/framework"), framework.name, framework.version, args.dryRun);
+    publishIfNeeded(resolve(repoRoot, "packages/create-colonel"), createColonel.name, createColonel.version, args.dryRun);
+}
 
-console.log("Release automation complete.");
+const targetLabel = args.target === "both" ? "GitHub + npm" : args.target;
+console.log(`Release automation complete (${targetLabel}).`);

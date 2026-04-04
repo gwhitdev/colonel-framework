@@ -10,8 +10,8 @@
   "scripts": {
     "start": "bun --watch examples/web/src/index.ts",
     "versions:workspace": "bun scripts/list-workspace-versions.ts",
-    "release:push": "bun scripts/release.ts",
-    "release": "bun scripts/release.ts --r",
+    "release:push": "bun scripts/release.ts --push",
+    "release": "bun scripts/release.ts",
     "test": "bun run test:framework",
     "test:framework": "bun test packages/framework/src",
     "test:parity": "bun scripts/check-template-parity.ts",
