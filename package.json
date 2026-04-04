@@ -13,7 +13,10 @@
     "test:framework": "bun test packages/framework/src",
     "test:parity": "bun scripts/check-template-parity.ts",
     "test:smoke": "bun scripts/smoke-create-colonel.ts",
-    "test:milestone2": "bun run test:framework && bun run test:parity && bun run test:smoke"
+    "test:commands": "bun scripts/check-scaffold-command-consistency.ts",
+    "test:versions": "bun scripts/check-version-alignment.ts",
+    "test:milestone2": "bun run test:framework && bun run test:parity && bun run test:smoke",
+    "test:release": "bun run test:versions && bun run test:commands"
   },
   "devDependencies": {
     "@types/bun": "latest",

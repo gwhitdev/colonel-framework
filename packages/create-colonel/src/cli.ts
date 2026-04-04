@@ -3,10 +3,20 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 
-const targetArg = process.argv[2];
+const args = process.argv.slice(2);
+const targetArg = args.find((arg) => !arg.startsWith("-"));
+const skipInstall = args.includes("--skip-install");
+const showHelp = args.includes("--help") || args.includes("-h");
+
+if (showHelp) {
+    console.log("Usage: bunx create-colonel <project-name> [--skip-install]");
+    console.log("\nOptions:");
+    console.log("  --skip-install    Scaffold files without running bun install");
+    process.exit(0);
+}
 
 if (!targetArg) {
-    console.error("Usage: bunx create-colonel <project-name>");
+    console.error("Usage: bunx create-colonel <project-name> [--skip-install]");
     process.exit(1);
 }
 
@@ -36,18 +46,25 @@ if (existsSync(resolve(localFrameworkPath, "package.json"))) {
 
 writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
-console.log("Installing dependencies...");
-const install = Bun.spawnSync(["bun", "install"], {
-    cwd: targetDir,
-    stdout: "inherit",
-    stderr: "inherit",
-});
+if (!skipInstall) {
+    console.log("Installing dependencies...");
+    const install = Bun.spawnSync(["bun", "install"], {
+        cwd: targetDir,
+        stdout: "inherit",
+        stderr: "inherit",
+    });
 
-if (install.exitCode !== 0) {
-    console.error("Project was created, but dependency installation failed.");
-    process.exit(install.exitCode);
+    if (install.exitCode !== 0) {
+        console.error("Project was created, but dependency installation failed.");
+        process.exit(install.exitCode);
+    }
 }
 
 console.log("\nColonel app created successfully.\n");
 console.log(`  cd ${targetArg}`);
+
+if (skipInstall) {
+    console.log("  bun install");
+}
+
 console.log("  bun run start\n");

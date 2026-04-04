@@ -28,3 +28,9 @@ jobs:
 
       - name: Scaffold Smoke Test
         run: bun run test:smoke
+
+      - name: Version Alignment
+        run: bun run test:versions
+
+      - name: Scaffold Command Consistency
+        run: bun run test:commands

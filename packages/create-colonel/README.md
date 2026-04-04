@@ -13,6 +13,14 @@ Scaffold a new Colonel app from the command line.
 bunx create-colonel my-app
 ```
 
+Optional flag:
+
+```bash
+bunx create-colonel my-app --skip-install
+```
+
+Use `--skip-install` when you only want scaffolded files and prefer to install dependencies later.
+
 Then run your new app:
 
 ```bash
