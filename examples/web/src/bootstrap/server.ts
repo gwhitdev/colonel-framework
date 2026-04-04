@@ -1,4 +1,4 @@
-import { Kernel } from "@coloneldev/framework";
+import { Kernel, createTelemetryClientFromEnv } from "@coloneldev/framework";
 import webRouter  from "../config/routes/web";
 import { existsSync } from "fs";
 import { extensions } from "../config/acceptedStaticContentTypes";
@@ -14,6 +14,10 @@ const viewsRoot = path.resolve(import.meta.dir, "..", "..", "resources", "views"
 const publicRoot = path.resolve(import.meta.dir, "..", "..", "public");
 const controllerRoot = path.resolve(import.meta.dir, "..", "app", "Http", "Controllers");
 const container = new Container();
+const telemetry = createTelemetryClientFromEnv({
+    source: "colonel-app",
+    appId: process.env.COLONEL_TELEMETRY_APP_ID ?? process.env.appName ?? "Colonel",
+});
 
 container.singleton(
     AppInfoService,
@@ -32,6 +36,10 @@ export const server = () => {
         session: {
             enabled: true,
         },
+        telemetry: {
+            client: telemetry,
+            sampleRate: 0.2,
+        },
         controllerResolver: async (name: string) => {
             const modulePath = `${controllerRoot}/${name}.ts`;
             const mod = await import(modulePath);
@@ -45,6 +53,11 @@ export const server = () => {
         }
     }, container);
     const PORT = Number(process.env.PORT) || 5000;
+    telemetry.track("server_start", {
+        port: PORT,
+        environment: process.env.NODE_ENV ?? "development",
+        runtime: "bun",
+    });
     
     console.log(`Server running at http://localhost:${PORT}/`);
 
