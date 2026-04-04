@@ -9,6 +9,7 @@ import { Container } from '../Container/Container';
 import { InMemorySessionStore, Session, type SessionStore } from './Session';
 import { html, json, text } from './HttpResponse';
 import { HttpException } from './errors';
+import { TelemetryClient } from './Telemetry';
 
 
 type ControllerClass = new (...args: any[]) => object;
@@ -24,6 +25,10 @@ interface KernelOptions {
         cookieName?: string;
         ttlSeconds?: number;
         store?: SessionStore;
+    };
+    telemetry?: {
+        client?: TelemetryClient;
+        sampleRate?: number;
     };
 }
 
@@ -46,6 +51,18 @@ const isViewPayload = (value: any): value is ViewPayload => {
 };
 
 const safeViewPath = (view: string) => view.replace(/\.\./g, '').replace(/\/+/g, '/');
+
+const anonymizePath = (pathname: string): string => {
+    const parts = pathname.split('/').filter(Boolean);
+    const normalized = parts.map((part) => {
+        if (/^[0-9]+$/.test(part)) return ':id';
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(part)) return ':uuid';
+        if (part.length > 40) return ':token';
+        return part;
+    });
+
+    return normalized.length === 0 ? '/' : `/${normalized.join('/')}`;
+};
 
 type SessionContext = {
     session: Session;
@@ -101,13 +118,18 @@ export class Kernel {
     private readonly defaultSessionStore = new InMemorySessionStore();
     private startupDiagnosticsCompleted = false;
     private startupDiagnosticsError: HttpException | null = null;
+    private telemetryClient: TelemetryClient | null = null;
+    private telemetrySampleRate = 1;
 
     constructor(
         private router = new Router(),
         private middleware: HttpMiddleware[] = [],
         private options: KernelOptions = {},
         private container: Container,
-    ) {}
+    ) {
+        this.telemetryClient = options.telemetry?.client ?? null;
+        this.telemetrySampleRate = options.telemetry?.sampleRate ?? 1;
+    }
 
     use(middleware: HttpMiddleware): this {
         this.middleware.push(middleware);
@@ -131,6 +153,7 @@ export class Kernel {
      */
     async handle(request: Request): Promise<Response> {
         const url = new URL(request.url);
+        const startedAt = Date.now();
         const sessionContext = await this.initializeSession(request.headers);
         const httpRequest = new HttpRequest({
             method: request.method,
@@ -150,12 +173,33 @@ export class Kernel {
             });
 
             const normalizedResponse = await this.normalizeResponse(response);
-            return await this.commitSession(normalizedResponse, sessionContext);
+            const committedResponse = await this.commitSession(normalizedResponse, sessionContext);
+            this.emitRequestTelemetry(httpRequest.method, url.pathname, committedResponse.status, Date.now() - startedAt);
+            return committedResponse;
         } catch (error) {
             const exception = this.toHttpException(error);
             const errorResponse = this.renderException(httpRequest, exception);
-            return await this.commitSession(errorResponse, sessionContext);
+            const committedError = await this.commitSession(errorResponse, sessionContext);
+            this.emitRequestTelemetry(httpRequest.method, url.pathname, committedError.status, Date.now() - startedAt);
+            return committedError;
         }
+    }
+
+    private emitRequestTelemetry(method: string, pathname: string, status: number, durationMs: number): void {
+        if (!this.telemetryClient) {
+            return;
+        }
+
+        if (this.telemetrySampleRate < 1 && Math.random() > this.telemetrySampleRate) {
+            return;
+        }
+
+        this.telemetryClient.track('framework_request', {
+            method,
+            status,
+            durationMs,
+            path: anonymizePath(pathname),
+        });
     }
 
     private async ensureStartupDiagnostics(): Promise<void> {

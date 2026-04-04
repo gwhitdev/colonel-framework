@@ -26,6 +26,23 @@ Optional flag:
 bunx create-colonel my-app --skip-install
 ```
 
+Telemetry flags:
+
+```bash
+bunx create-colonel my-app \
+	--telemetry yes \
+	--telemetry-endpoint https://colonel-telemetry.vercel.app/api/ingest \
+	--telemetry-provision-endpoint https://colonel-telemetry.vercel.app/api/provision-app \
+	--telemetry-provision-token <token>
+```
+
+When telemetry is enabled and provisioning succeeds, the scaffolded `.env` receives:
+
+- `COLONEL_TELEMETRY_ENABLED`
+- `COLONEL_TELEMETRY_ENDPOINT`
+- `COLONEL_TELEMETRY_APP_ID`
+- `COLONEL_TELEMETRY_KEY`
+
 Use `--skip-install` when you only want scaffolded files and prefer to install dependencies later.
 
 Then run your new app:
