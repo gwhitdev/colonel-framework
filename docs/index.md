@@ -23,6 +23,7 @@ These docs are written for:
 
 - [Getting Started](getting-started.md)
 - [Why Colonel](why-colonel.md)
+- [Developer Experience Progress](developer-experience-progress.md)
 - [Architecture](architecture.md)
 - [Routing](routing.md)
 - [Controllers and Dependency Injection](controllers-and-di.md)
