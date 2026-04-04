@@ -1,5 +1,27 @@
 import type { HttpRequestProps } from "./interfaces/HttpRequestPropsInterface";
 import type { Session } from "./Session";
+import { ValidationError, type ErrorBag } from "./errors";
+
+type PrimitiveType = "string" | "number" | "boolean" | "array" | "object";
+
+export interface ValidationRule {
+    required?: boolean;
+    type?: PrimitiveType;
+    minLength?: number;
+    maxLength?: number;
+    min?: number;
+    max?: number;
+    pattern?: RegExp;
+    custom?: (value: unknown, data: Record<string, unknown>) => string | null | undefined;
+}
+
+export type ValidationRules = Record<string, ValidationRule>;
+
+const detectType = (value: unknown): PrimitiveType | "null" => {
+    if (value === null) return "null";
+    if (Array.isArray(value)) return "array";
+    return typeof value as PrimitiveType;
+};
 
 export class HttpRequest {
     readonly method: string;
@@ -51,8 +73,75 @@ export class HttpRequest {
         return (this.headers.get("content-type") || "").includes("application/json");
     }
 
+    wantsJson(): boolean {
+        const accept = (this.header("accept") || "").toLowerCase();
+        return this.isJson() || accept.includes("application/json");
+    }
+
     setParams (params: Record<string, string>) {
         this._params = params;
+    }
+
+    validate(rules: ValidationRules): Record<string, unknown> {
+        const data = this.all();
+        const errors: ErrorBag = {};
+
+        for (const [field, rule] of Object.entries(rules)) {
+            const value = data[field];
+            const isMissing = value === undefined || value === null || value === "";
+
+            if (rule.required && isMissing) {
+                errors[field] = [...(errors[field] ?? []), `${field} is required`];
+                continue;
+            }
+
+            if (isMissing) {
+                continue;
+            }
+
+            const valueType = detectType(value);
+
+            if (rule.type && valueType !== rule.type) {
+                errors[field] = [...(errors[field] ?? []), `${field} must be a ${rule.type}`];
+            }
+
+            if (typeof value === "string") {
+                if (typeof rule.minLength === "number" && value.length < rule.minLength) {
+                    errors[field] = [...(errors[field] ?? []), `${field} must be at least ${rule.minLength} characters`];
+                }
+
+                if (typeof rule.maxLength === "number" && value.length > rule.maxLength) {
+                    errors[field] = [...(errors[field] ?? []), `${field} must be at most ${rule.maxLength} characters`];
+                }
+
+                if (rule.pattern && !rule.pattern.test(value)) {
+                    errors[field] = [...(errors[field] ?? []), `${field} format is invalid`];
+                }
+            }
+
+            if (typeof value === "number") {
+                if (typeof rule.min === "number" && value < rule.min) {
+                    errors[field] = [...(errors[field] ?? []), `${field} must be at least ${rule.min}`];
+                }
+
+                if (typeof rule.max === "number" && value > rule.max) {
+                    errors[field] = [...(errors[field] ?? []), `${field} must be at most ${rule.max}`];
+                }
+            }
+
+            if (rule.custom) {
+                const customError = rule.custom(value, data);
+                if (customError) {
+                    errors[field] = [...(errors[field] ?? []), customError];
+                }
+            }
+        }
+
+        if (Object.keys(errors).length > 0) {
+            throw new ValidationError(errors);
+        }
+
+        return data;
     }
 
 

@@ -7,6 +7,8 @@ import { staticPaths } from "../config/staticPaths";
 import path, { extname } from "path";
 import { Container } from "@coloneldev/framework";
 import { AppInfoService } from "../app/Services/AppInfoService.ts";
+import { requireJsonForWrites } from "../app/Http/Middleware/RequireJsonForWrites.ts";
+import { traceHeader } from "../app/Http/Middleware/TraceHeader.ts";
 
 const viewsRoot = path.resolve(import.meta.dir, "..", "..", "resources", "views");
 const publicRoot = path.resolve(import.meta.dir, "..", "..", "public");
@@ -22,7 +24,10 @@ container.singleton(
 );
 
 export const server = () => {
-    const Colonel = new Kernel(webRouter, [], {
+    const Colonel = new Kernel(webRouter, [
+        requireJsonForWrites,
+        traceHeader,
+    ], {
         viewsRoot,
         session: {
             enabled: true,

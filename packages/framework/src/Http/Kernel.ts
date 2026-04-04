@@ -6,10 +6,14 @@ import ejs from 'ejs';
 import type { RouteHandler } from './types/RouteHandler';
 import { Container } from '../Container/Container';
 import { InMemorySessionStore, Session, type SessionStore } from './Session';
+import { html, json, text } from './HttpResponse';
+import { HttpException } from './errors';
 
 
 type ControllerClass = new (...args: any[]) => object;
 type ControllerResolver = (name: string) => Promise<ControllerClass>;
+export type NextFunction = () => Promise<unknown>;
+export type HttpMiddleware = (request: HttpRequest, next: NextFunction) => unknown | Promise<unknown>;
 
 interface KernelOptions {
     controllerResolver?: ControllerResolver;
@@ -81,10 +85,15 @@ export class Kernel {
 
     constructor(
         private router = new Router(),
-        private middleware: Array<Function> = [],
+        private middleware: HttpMiddleware[] = [],
         private options: KernelOptions = {},
         private container: Container,
     ) {}
+
+    use(middleware: HttpMiddleware): this {
+        this.middleware.push(middleware);
+        return this;
+    }
 
     private async resolveController(name: string): Promise<ControllerClass> {
         if (!this.options.controllerResolver) {
@@ -116,14 +125,15 @@ export class Kernel {
         try {
             // Run middleware pipeline
             const response = await this.runMiddlewarePipeline(httpRequest, async () => {
-                return this.dispatchToRouter(httpRequest)
+                return this.dispatchToRouter(httpRequest);
             });
 
             const normalizedResponse = await this.normalizeResponse(response);
             return await this.commitSession(normalizedResponse, sessionContext);
         } catch (error) {
-            console.error(error);
-            return this.handleException("Middleware couldn't process the request", 500);
+            const exception = this.toHttpException(error);
+            const errorResponse = this.renderException(httpRequest, exception);
+            return await this.commitSession(errorResponse, sessionContext);
         }
     }
 
@@ -187,18 +197,18 @@ export class Kernel {
     /**
      * Run middleware in sequence
      */
-    private async runMiddlewarePipeline(req: HttpRequest, finalHandler: Function) {
+    private async runMiddlewarePipeline(req: HttpRequest, finalHandler: (request: HttpRequest) => Promise<unknown>) {
         let index = -1;
 
-        const runner = async (i: number): Promise<Response> => {
-            if (i <= index) throw new Error("next() called multiple times");
+        const runner = async (i: number): Promise<unknown> => {
+            if (i <= index) throw new HttpException(500, "next() called multiple times");
             index = i;
 
             const middleware = this.middleware[i];
             if (!middleware) return finalHandler(req);
 
             return middleware(req, () => runner(i + 1));
-        }
+        };
 
         return runner(0);
     }
@@ -206,11 +216,11 @@ export class Kernel {
     /** 
      * Ask the router to resolve the route and call the controller
      */
-    private async dispatchToRouter(req: HttpRequest) {
+    private async dispatchToRouter(req: HttpRequest): Promise<unknown> {
 
         const route = this.router.match(req.method as HttpMethod, req.path());
 
-        if (!route) return new Response("Not Found", { status: 404 });
+        if (!route) throw new HttpException(404, "Not Found");
         
         req.setParams(route.params);
 
@@ -222,13 +232,13 @@ export class Kernel {
         const handler = route.handler as RouteHandler;
 
         if (typeof handler !== "string") {
-            return new Response("Invalid route handler type", { status: 500 });
+            throw new HttpException(500, "Invalid route handler type");
         }
 
         const parts: string[] = handler.split("@");
 
         if (parts.length !== 2) {
-            return new Response("Invalid route handler format", { status: 500 });
+            throw new HttpException(500, "Invalid route handler format");
         }
 
         const [controllerName, method] = parts;
@@ -239,17 +249,17 @@ export class Kernel {
 
         const action = (controllerInstance as any)[method!] as (req: HttpRequest) => Promise<Response> | Response;
 
-        if (typeof action !== "function") return new Response("Action not found", { status: 500 });
+        if (typeof action !== "function") {
+            throw new HttpException(500, `Action not found: ${controllerName}@${method}`);
+        }
 
-        const result = await action.call(controllerInstance, req);
-
-        return result;
+        return await action.call(controllerInstance, req);
     }
 
     /**
      * Convert controller output into a proper Response
      */
-    private async normalizeResponse(result: any): Promise<Response> {
+    private async normalizeResponse(result: unknown): Promise<Response> {
         if (result instanceof Response) return result;
 
         if (isViewPayload(result)) {
@@ -264,7 +274,9 @@ export class Kernel {
             const safeTemplate = safeViewPath(template);
             
             // Inject env appName into titleData if available
-            process.env.appName ? data.titleData = `${data.titleData} | ${process.env.appName}`: null; 
+            if (process.env.appName) {
+                data.titleData = `${data.titleData} | ${process.env.appName}`;
+            }
 
             try {
                 const childPath = join(this.viewRoot(), `${safeTemplate}.ejs`);
@@ -283,7 +295,7 @@ export class Kernel {
 
                     console.info(`Rendering layout: ${layoutPath}`);
 
-                    const [bodyHtml, footerHtml, titleHtml] = await Promise.all([
+                    const [renderedBody, footerHtml, titleHtml] = await Promise.all([
                         ejs.renderFile(childPath, data || {}),
                         ejs.renderFile(footerPath, {
                             footerData:(data as any).footerData 
@@ -299,43 +311,54 @@ export class Kernel {
 
                     const finalHtml = await ejs.renderFile(layoutPath, { 
                         ...(data ?? {}), 
-                        body: bodyHtml,
+                        body: renderedBody,
                         footer: footerHtml,
                         title: titleHtml
                     });
 
-                    return new Response(finalHtml, {
-                        headers: { "Content-Type": "text/html; charset=utf-8" }
-                    });
+                    return html(finalHtml);
                 }
 
                 // No layout, return child as-is
-                return new Response(bodyHtml, {
-                    headers: { "Content-Type": "text/html; charset=utf-8" }
-                });
+                return html(bodyHtml);
             } catch (err) {
-                console.error(err);
-                return this.handleException("Error rendering value", 500)
+                throw new HttpException(500, "Error rendering view", err);
             }
         }
 
         if (typeof result === "object" && result !== null) {
-            return new Response(JSON.stringify(result), {
-                headers: { "Content-Type": "application/json" }
-            });
+            return json(result);
         }
 
-        return new Response(String(result ?? ""), { status: 200 });
+        return text(String(result ?? ""), 200);
     }
 
-    /** 
-     * Centralized error handling
-     */
-    private handleException(error: any, code: number): Response {
-        console.error(error);
-        const errorString = error ?? "Internal Server Error";
-        return new Response(errorString, { 
-            status: code 
-        });
+    private toHttpException(error: unknown): HttpException {
+        if (error instanceof HttpException) {
+            return error;
+        }
+
+        if (error instanceof Error) {
+            return new HttpException(500, error.message);
+        }
+
+        return new HttpException(500, "Internal Server Error");
+    }
+
+    private renderException(request: HttpRequest, error: HttpException): Response {
+        const message = error.status >= 500 ? "Internal Server Error" : error.message;
+        const details = error.status >= 500 ? undefined : error.details;
+
+        if (request.wantsJson()) {
+            return json({
+                error: {
+                    status: error.status,
+                    message,
+                    details,
+                }
+            }, error.status);
+        }
+
+        return text(message, error.status);
     }
 }

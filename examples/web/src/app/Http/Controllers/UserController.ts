@@ -1,4 +1,4 @@
-import type { HttpRequest } from "@coloneldev/framework";
+import { json, type HttpRequest } from "@coloneldev/framework";
 import Controller from "./Controller";
 
 
@@ -27,5 +27,24 @@ export class UserController extends Controller {
                 }
             }
         ]
+    }
+
+    create(req: HttpRequest): Response {
+        const payload = req.validate({
+            name: { required: true, type: "string", minLength: 2, maxLength: 80 },
+            email: {
+                required: true,
+                type: "string",
+                pattern: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
+            },
+        });
+
+        return json({
+            message: "User payload accepted",
+            user: {
+                name: payload.name,
+                email: payload.email,
+            },
+        }, 201);
     }
 }   

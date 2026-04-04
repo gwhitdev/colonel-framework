@@ -13,6 +13,7 @@ web.get('/', 'AppController@index');
 web.group('/users', (users) => {
 	users.get('/', 'UserController@index');
 	users.get('/:id', 'UserController@show');
+	users.post('/', 'UserController@create');
 });
 
 export default web;
