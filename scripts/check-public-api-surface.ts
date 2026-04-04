@@ -12,6 +12,7 @@ const expectedExports = [
     'export * from "./Http/errors";',
     'export * from "./Http/staticFiles";',
     'export * from "./Http/Session";',
+    'export * from "./Http/Telemetry";',
     'export * from "./Container/Container";',
 ];
 
