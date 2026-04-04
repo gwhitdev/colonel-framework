@@ -7,6 +7,10 @@ export class Router {
     private routes: RouteDefinitionInterface[] = [];
     private prefixStack: string[] = [];
 
+    definitions(): ReadonlyArray<RouteDefinitionInterface> {
+        return [...this.routes];
+    }
+
     get(path: string, handler: RouteHandler) {
         this.add("GET", path, handler);
         return this;

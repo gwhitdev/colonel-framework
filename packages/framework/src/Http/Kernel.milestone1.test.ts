@@ -117,7 +117,9 @@ describe("Kernel milestone 1", () => {
             error: {
                 status: 500,
                 message: "Internal Server Error",
-                details: undefined,
+                details: {
+                    message: "controller exploded",
+                },
             },
         });
     });

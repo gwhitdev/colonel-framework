@@ -2,6 +2,7 @@ import { HttpRequest } from './HttpRequest';
 import { Router } from './Router';
 import type { HttpMethod } from './types/HttpMethod';
 import { join, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
 import ejs from 'ejs';
 import type { RouteHandler } from './types/RouteHandler';
 import { Container } from '../Container/Container';
@@ -80,8 +81,26 @@ const createSessionId = (): string => {
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
+const serializeDetails = (value: unknown): unknown => {
+    if (value instanceof HttpException) {
+        return {
+            message: value.message,
+            status: value.status,
+            details: serializeDetails(value.details),
+        };
+    }
+
+    if (value instanceof Error) {
+        return { message: value.message };
+    }
+
+    return value;
+};
+
 export class Kernel {
     private readonly defaultSessionStore = new InMemorySessionStore();
+    private startupDiagnosticsCompleted = false;
+    private startupDiagnosticsError: HttpException | null = null;
 
     constructor(
         private router = new Router(),
@@ -123,6 +142,8 @@ export class Kernel {
         });
 
         try {
+            await this.ensureStartupDiagnostics();
+
             // Run middleware pipeline
             const response = await this.runMiddlewarePipeline(httpRequest, async () => {
                 return this.dispatchToRouter(httpRequest);
@@ -135,6 +156,95 @@ export class Kernel {
             const errorResponse = this.renderException(httpRequest, exception);
             return await this.commitSession(errorResponse, sessionContext);
         }
+    }
+
+    private async ensureStartupDiagnostics(): Promise<void> {
+        if (this.startupDiagnosticsError) {
+            throw this.startupDiagnosticsError;
+        }
+
+        if (this.startupDiagnosticsCompleted) {
+            return;
+        }
+
+        const routes = this.router.definitions();
+        const seenPaths = new Set<string>();
+        const controllerActions = new Map<string, Set<string>>();
+
+        for (const route of routes) {
+            const routeKey = `${route.method} ${route.path}`;
+
+            if (seenPaths.has(routeKey)) {
+                this.startupDiagnosticsError = new HttpException(500, "Duplicate route definition detected", {
+                    route: routeKey,
+                });
+                throw this.startupDiagnosticsError;
+            }
+
+            seenPaths.add(routeKey);
+
+            if (typeof route.handler === "function") {
+                continue;
+            }
+
+            if (typeof route.handler !== "string") {
+                this.startupDiagnosticsError = new HttpException(500, "Invalid route handler type", {
+                    route: routeKey,
+                });
+                throw this.startupDiagnosticsError;
+            }
+
+            const parts = route.handler.split("@");
+            if (parts.length !== 2 || !parts[0] || !parts[1]) {
+                this.startupDiagnosticsError = new HttpException(500, "Invalid route handler format", {
+                    route: routeKey,
+                    handler: route.handler,
+                    expected: "Controller@method",
+                });
+                throw this.startupDiagnosticsError;
+            }
+
+            const [controllerName, actionName] = parts;
+            if (!controllerActions.has(controllerName)) {
+                controllerActions.set(controllerName, new Set<string>());
+            }
+
+            controllerActions.get(controllerName)?.add(actionName);
+        }
+
+        if (controllerActions.size > 0 && !this.options.controllerResolver) {
+            this.startupDiagnosticsError = new HttpException(500, "Controller resolver is required for string route handlers", {
+                routes: Array.from(controllerActions.keys()),
+            });
+            throw this.startupDiagnosticsError;
+        }
+
+        for (const [controllerName, methods] of controllerActions.entries()) {
+            let imported: ControllerClass;
+
+            try {
+                imported = await this.resolveController(controllerName);
+            } catch (error) {
+                this.startupDiagnosticsError = new HttpException(500, "Controller resolution failed", {
+                    controller: controllerName,
+                    reason: error instanceof Error ? error.message : String(error),
+                });
+                throw this.startupDiagnosticsError;
+            }
+
+            const prototype = (imported as any).prototype;
+            for (const method of methods) {
+                if (!prototype || typeof prototype[method] !== "function") {
+                    this.startupDiagnosticsError = new HttpException(500, "Controller action not found", {
+                        controller: controllerName,
+                        action: method,
+                    });
+                    throw this.startupDiagnosticsError;
+                }
+            }
+        }
+
+        this.startupDiagnosticsCompleted = true;
     }
 
     private async initializeSession(headers: Headers): Promise<SessionContext | null> {
@@ -280,12 +390,16 @@ export class Kernel {
 
             try {
                 const childPath = join(this.viewRoot(), `${safeTemplate}.ejs`);
+                this.assertViewExists(childPath, template);
                 const bodyHtml = await ejs.renderFile(childPath, data || {});
 
                 // Wrap in layout if provided
                 if (layout) {
-                    const returnPath = async (path: string): Promise<string> => 
-                        join(this.viewRoot(), `${safeViewPath(path)}.ejs`);
+                    const returnPath = async (path: string): Promise<string> => {
+                        const resolvedPath = join(this.viewRoot(), `${safeViewPath(path)}.ejs`);
+                        this.assertViewExists(resolvedPath, path);
+                        return resolvedPath;
+                    };
                     
                     const [layoutPath, footerPath, titlePath] = await Promise.all([
                         returnPath(layout),
@@ -333,6 +447,17 @@ export class Kernel {
         return text(String(result ?? ""), 200);
     }
 
+    private assertViewExists(filePath: string, viewName: string): void {
+        if (existsSync(filePath)) {
+            return;
+        }
+
+        throw new HttpException(500, "View file not found", {
+            view: viewName,
+            filePath,
+        });
+    }
+
     private toHttpException(error: unknown): HttpException {
         if (error instanceof HttpException) {
             return error;
@@ -346,8 +471,11 @@ export class Kernel {
     }
 
     private renderException(request: HttpRequest, error: HttpException): Response {
+        const includeInternalDetails = process.env.NODE_ENV !== "production";
         const message = error.status >= 500 ? "Internal Server Error" : error.message;
-        const details = error.status >= 500 ? undefined : error.details;
+        const details = error.status >= 500
+            ? (includeInternalDetails ? serializeDetails(error.details ?? { message: error.message }) : undefined)
+            : error.details;
 
         if (request.wantsJson()) {
             return json({
