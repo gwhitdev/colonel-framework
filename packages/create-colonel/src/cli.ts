@@ -9,12 +9,14 @@ type TelemetryConsent = "yes" | "no";
 
 const DEFAULT_TELEMETRY_ENDPOINT = "https://colonel-telemetry.vercel.app/api/ingest";
 
-const deriveProvisionEndpoint = (ingestEndpoint: string): string => {
+const deriveProvisionEndpoint = (ingestEndpoint: string, publicProvision = false): string => {
+    const suffix = publicProvision ? "/api/provision-public" : "/api/provision-app";
+
     if (ingestEndpoint.endsWith("/api/ingest")) {
-        return `${ingestEndpoint.slice(0, -"/api/ingest".length)}/api/provision-app`;
+        return `${ingestEndpoint.slice(0, -"/api/ingest".length)}${suffix}`;
     }
 
-    return `${ingestEndpoint.replace(/\/$/, "")}/api/provision-app`;
+    return `${ingestEndpoint.replace(/\/$/, "")}${suffix}`;
 };
 
 const upsertEnv = (content: string, key: string, value: string): string => {
@@ -70,15 +72,20 @@ const provisionTelemetryApp = async (
     appName: string,
     source: string,
     provisionEndpoint: string,
-    provisionToken: string
+    provisionToken?: string
 ): Promise<{ appId: string; ingestKey: string } | null> => {
     try {
+        const headers: Record<string, string> = {
+            "content-type": "application/json",
+        };
+
+        if (provisionToken) {
+            headers.authorization = `Bearer ${provisionToken}`;
+        }
+
         const response = await fetch(provisionEndpoint, {
             method: "POST",
-            headers: {
-                "content-type": "application/json",
-                authorization: `Bearer ${provisionToken}`,
-            },
+            headers,
             body: JSON.stringify({ appName, source }),
         });
 
@@ -128,25 +135,29 @@ const showHelp = args.includes("--help") || args.includes("-h");
 const telemetryFlag = parseOptionValue(args, "--telemetry");
 const telemetryConsentFromFlag = normalizeConsent(telemetryFlag);
 const telemetryEndpoint = parseOptionValue(args, "--telemetry-endpoint") ?? process.env.COLONEL_TELEMETRY_ENDPOINT ?? DEFAULT_TELEMETRY_ENDPOINT;
-const provisionEndpoint = parseOptionValue(args, "--telemetry-provision-endpoint")
+const secureProvisionEndpoint = parseOptionValue(args, "--telemetry-provision-endpoint")
     ?? process.env.COLONEL_TELEMETRY_PROVISION_ENDPOINT
-    ?? deriveProvisionEndpoint(telemetryEndpoint);
+    ?? deriveProvisionEndpoint(telemetryEndpoint, false);
+const publicProvisionEndpoint = parseOptionValue(args, "--telemetry-public-provision-endpoint")
+    ?? process.env.COLONEL_TELEMETRY_PUBLIC_PROVISION_ENDPOINT
+    ?? deriveProvisionEndpoint(telemetryEndpoint, true);
 const provisionToken = parseOptionValue(args, "--telemetry-provision-token")
     ?? process.env.COLONEL_TELEMETRY_PROVISION_TOKEN;
 
 if (showHelp) {
-    console.log("Usage: bunx create-colonel <project-name> [--skip-install] [--telemetry yes|no] [--telemetry-endpoint <url>] [--telemetry-provision-endpoint <url>] [--telemetry-provision-token <token>]");
+    console.log("Usage: bunx create-colonel <project-name> [--skip-install] [--telemetry yes|no] [--telemetry-endpoint <url>] [--telemetry-provision-endpoint <url>] [--telemetry-public-provision-endpoint <url>] [--telemetry-provision-token <token>]");
     console.log("\nOptions:");
     console.log("  --skip-install    Scaffold files without running bun install");
     console.log("  --telemetry       Set anonymous telemetry consent without interactive prompt");
     console.log("  --telemetry-endpoint  Override telemetry ingestion endpoint");
     console.log("  --telemetry-provision-endpoint  Override telemetry app provisioning endpoint");
+    console.log("  --telemetry-public-provision-endpoint  Override public app provisioning endpoint");
     console.log("  --telemetry-provision-token  Bearer token used for telemetry app provisioning");
     process.exit(0);
 }
 
 if (!targetArg) {
-    console.error("Usage: bunx create-colonel <project-name> [--skip-install] [--telemetry yes|no] [--telemetry-endpoint <url>] [--telemetry-provision-endpoint <url>] [--telemetry-provision-token <token>]");
+    console.error("Usage: bunx create-colonel <project-name> [--skip-install] [--telemetry yes|no] [--telemetry-endpoint <url>] [--telemetry-provision-endpoint <url>] [--telemetry-public-provision-endpoint <url>] [--telemetry-provision-token <token>]");
     process.exit(1);
 }
 
@@ -185,16 +196,26 @@ const consent = telemetryConsentFromFlag ?? await askTelemetryConsent();
 let provisionedAppId: string | undefined;
 let provisionedIngestKey: string | undefined;
 
-if (consent === "yes" && provisionToken) {
-    const provisioned = await provisionTelemetryApp(
-        basename(targetDir),
-        "create-colonel",
-        provisionEndpoint,
-        provisionToken
-    );
+if (consent === "yes") {
+    const provisioned = provisionToken
+        ? await provisionTelemetryApp(
+            basename(targetDir),
+            "create-colonel",
+            secureProvisionEndpoint,
+            provisionToken
+        )
+        : await provisionTelemetryApp(
+            basename(targetDir),
+            "create-colonel",
+            publicProvisionEndpoint
+        );
 
     provisionedAppId = provisioned?.appId;
     provisionedIngestKey = provisioned?.ingestKey;
+
+    if (!provisionedAppId || !provisionedIngestKey) {
+        console.warn("Telemetry consented but provisioning did not return credentials.");
+    }
 }
 
 configureTelemetryEnv(targetDir, consent, telemetryEndpoint, provisionedAppId, provisionedIngestKey);

@@ -31,6 +31,16 @@ Telemetry flags:
 ```bash
 bunx create-colonel my-app \
 	--telemetry yes \
+	--telemetry-endpoint https://colonel-telemetry.vercel.app/api/ingest
+```
+
+By default, when telemetry consent is `yes`, create-colonel uses the public provisioning endpoint to fetch app credentials automatically.
+
+Optional secure provisioning override:
+
+```bash
+bunx create-colonel my-app \
+	--telemetry yes \
 	--telemetry-endpoint https://colonel-telemetry.vercel.app/api/ingest \
 	--telemetry-provision-endpoint https://colonel-telemetry.vercel.app/api/provision-app \
 	--telemetry-provision-token <token>
