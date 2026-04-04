@@ -102,6 +102,16 @@ These are good follow-up candidates after the first stable release:
 - Database integration or data-access helpers.
 - Plugin or extension architecture.
 
+## Roadmap Issue Tracking
+
+Roadmap work is tracked in GitHub issues using a consistent convention:
+
+- `enhancement` plus `roadmap` labels
+- `DI Roadmap` or `DX Roadmap` style titles
+- phase milestones when a group of issues belongs to a coordinated slice
+
+This keeps the public roadmap readable without forcing readers to inspect issue bodies for structure.
+
 ## 1.0 Release Bar
 
 Colonel is ready for 1.0.0 when all of the following are true:
