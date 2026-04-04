@@ -1,0 +1,68 @@
+name: Publish Packages On Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Validate release tag matches package versions
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          FRAMEWORK_VERSION=$(node -p "require('./packages/framework/package.json').version")
+          CREATE_VERSION=$(node -p "require('./packages/create-colonel/package.json').version")
+
+          echo "release-tag=${TAG_VERSION}"
+          echo "framework-version=${FRAMEWORK_VERSION}"
+          echo "create-colonel-version=${CREATE_VERSION}"
+
+          if [ "$FRAMEWORK_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag version does not match framework package version"
+            exit 1
+          fi
+
+          if [ "$CREATE_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag version does not match create-colonel package version"
+            exit 1
+          fi
+
+      - name: Publish @coloneldev/framework if needed
+        run: |
+          FRAMEWORK_NAME=$(node -p "require('./packages/framework/package.json').name")
+          FRAMEWORK_VERSION=$(node -p "require('./packages/framework/package.json').version")
+
+          if npm view "${FRAMEWORK_NAME}@${FRAMEWORK_VERSION}" version >/dev/null 2>&1; then
+            echo "${FRAMEWORK_NAME}@${FRAMEWORK_VERSION} already published, skipping"
+            exit 0
+          fi
+
+          cd packages/framework
+          npm publish --access public
+
+      - name: Publish create-colonel if needed
+        run: |
+          CREATE_NAME=$(node -p "require('./packages/create-colonel/package.json').name")
+          CREATE_VERSION=$(node -p "require('./packages/create-colonel/package.json').version")
+
+          if npm view "${CREATE_NAME}@${CREATE_VERSION}" version >/dev/null 2>&1; then
+            echo "${CREATE_NAME}@${CREATE_VERSION} already published, skipping"
+            exit 0
+          fi
+
+          cd packages/create-colonel
+          npm publish --access public

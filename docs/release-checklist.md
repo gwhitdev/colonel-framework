@@ -35,6 +35,12 @@ Use this checklist before publishing any Colonel release.
 4. Verify scaffold output with `bunx create-colonel my-app`.
 5. Create and push annotated tag (for example `v1.0.0`) on the publish commit.
 
+If using automated publish on GitHub Release:
+
+- Add repository secret `NPM_TOKEN` with npm publish permissions.
+- Ensure package versions match the release tag (for example tag `v1.0.2` and package versions `1.0.2`).
+- Publish a GitHub Release from the version tag to trigger workflow `.github/workflows/publish-on-release.yml`.
+
 ## 6. Post-Publish Validation
 
 - Generate a fresh app with published packages.

@@ -8,7 +8,7 @@
     "upgrade:colonel": "bun add @coloneldev/framework@latest"
   },
   "dependencies": {
-    "@coloneldev/framework": "^1.0.1",
+    "@coloneldev/framework": "^1.0.2",
     "ejs": "^5.0.1"
   },
   "devDependencies": {
