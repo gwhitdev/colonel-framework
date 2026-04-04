@@ -11,6 +11,8 @@
     "start": "bun --watch examples/web/src/index.ts",
     "release": "bun .local/scripts/release.ts",
     "release:push": "bun .local/scripts/release.ts --push",
+    "versions": "bun .local/scripts/list-workspace-versions.ts",
+    "versions:workspace": "bun .local/scripts/list-workspace-versions.ts",
     "test": "bun run test:framework",
     "test:framework": "bun test packages/framework/src",
     "test:parity": "bun scripts/check-template-parity.ts",
