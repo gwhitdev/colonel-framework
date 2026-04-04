@@ -32,7 +32,7 @@ The package exports stable framework primitives from the root entry:
 - static file helpers (`isStaticPath`, `toPublicFilePath`, `contentTypeFor`)
 - `Container`
 
-For detailed 1.x stability guarantees, see [docs/stable-api.md](../../docs/stable-api.md).
+For detailed 1.x stability guarantees, see [Stable API Contract](https://gwhitdev.github.io/colonel-framework/stable-api).
 
 ## Example
 
