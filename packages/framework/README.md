@@ -2,6 +2,17 @@
 
 Core HTTP and routing runtime for Colonel applications.
 
+## Why Developers Pick It
+
+From the runtime user's perspective:
+
+- explicit routing and controller mapping over hidden conventions
+- constructor injection that is readable and debuggable
+- startup diagnostics for common misconfigurations
+- stable 1.x API surface with documented guarantees
+
+See the user-focused overview at https://gwhitdev.github.io/colonel-framework/why-colonel.
+
 [![npm version](https://img.shields.io/npm/v/@coloneldev/framework)](https://www.npmjs.com/package/@coloneldev/framework)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](../../LICENSE)
 [![Runtime: Bun](https://img.shields.io/badge/runtime-bun-black)](https://bun.sh)

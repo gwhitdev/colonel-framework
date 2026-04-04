@@ -9,6 +9,18 @@
 
 Colonel is a TypeScript-first web framework running on Bun, with a minimal HTTP kernel, router, dependency injection container, and EJS view support.
 
+## Why Teams Choose Colonel
+
+From a user's perspective, Colonel is designed to avoid common framework pain points:
+
+- "I cannot tell where behavior comes from" -> Colonel favors explicit wiring and predictable flow.
+- "Upgrades break too much at once" -> Colonel treats the 1.x API contract as stable.
+- "Dependency injection feels like magic" -> Colonel keeps constructor injection explicit and debuggable.
+- "Framework defaults are heavy" -> Colonel keeps a compact core and additive features.
+- "Generated projects drift from docs" -> Colonel validates template parity and scaffold smoke tests.
+
+Read the full user-focused breakdown in [docs/why-colonel.md](docs/why-colonel.md).
+
 ## Monorepo Layout
 
 - [packages/framework](packages/framework) core runtime package published as `@coloneldev/framework`

@@ -2,6 +2,13 @@
 
 Scaffold a new Colonel app from the command line.
 
+## Why Users Like It
+
+- scaffolds a working app with practical defaults
+- includes middleware and validation-ready patterns out of the box
+- keeps generated structure aligned with docs and framework conventions
+- supports a simple default flow plus optional `--skip-install`
+
 [![npm version](https://img.shields.io/npm/v/create-colonel)](https://www.npmjs.com/package/create-colonel)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](../../LICENSE)
 [![Runtime: Bun](https://img.shields.io/badge/runtime-bun-black)](https://bun.sh)

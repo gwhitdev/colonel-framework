@@ -22,6 +22,7 @@ These docs are written for:
 ## Read Next
 
 - [Getting Started](getting-started.md)
+- [Why Colonel](why-colonel.md)
 - [Architecture](architecture.md)
 - [Routing](routing.md)
 - [Controllers and Dependency Injection](controllers-and-di.md)
