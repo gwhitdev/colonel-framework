@@ -9,8 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,7 +51,7 @@ jobs:
           fi
 
           cd packages/framework
-          npm publish --access public
+          npm publish --provenance --access public
 
       - name: Publish create-colonel if needed
         run: |
@@ -65,4 +64,4 @@ jobs:
           fi
 
           cd packages/create-colonel
-          npm publish --access public
+          npm publish --provenance --access public
