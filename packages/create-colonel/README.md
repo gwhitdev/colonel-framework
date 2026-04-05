@@ -85,7 +85,8 @@ bun run start
 ## What It Does
 
 - Fetches the app template tarball from the `colonel-framework` repository.
-- Extracts `packages/create-colonel/template` from the tarball into a new folder.
+- Extracts scaffold source files from the tarball into a new folder.
+- Uses `packages/create-colonel/template` when present, otherwise falls back to `examples/web`.
 - Sets the generated `package.json` name from the folder name.
 - Installs dependencies automatically.
 - Prints next-step commands.

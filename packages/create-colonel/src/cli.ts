@@ -68,7 +68,12 @@ const deriveTemplateTarballUrl = (repo: string, ref: string): string => {
     return `https://codeload.github.com/${repo}/tar.gz/${encodedRef}`;
 };
 
-const scaffoldFromTarball = async (targetDir: string, tarballUrl: string): Promise<void> => {
+type TarballScaffoldMeta = {
+    frameworkVersion?: string;
+    sourcePath: string;
+};
+
+const scaffoldFromTarball = async (targetDir: string, tarballUrl: string): Promise<TarballScaffoldMeta> => {
     const tempRoot = mkdtempSync(join(tmpdir(), "create-colonel-template-"));
     const archivePath = join(tempRoot, "template.tar.gz");
     const extractDir = join(tempRoot, "extracted");
@@ -94,16 +99,38 @@ const scaffoldFromTarball = async (targetDir: string, tarballUrl: string): Promi
             throw new Error(details || "tar extraction failed");
         }
 
-        const extractedRoot = readdirSync(extractDir).find((entry) =>
-            existsSync(resolve(extractDir, entry, "packages", "create-colonel", "template"))
-        );
+        const extractedRoot = readdirSync(extractDir)[0];
 
         if (!extractedRoot) {
-            throw new Error("Template path packages/create-colonel/template not found in tarball");
+            throw new Error("No extracted root directory found in tarball");
         }
 
-        const templateDir = resolve(extractDir, extractedRoot, "packages", "create-colonel", "template");
-        cpSync(templateDir, targetDir, { recursive: true });
+        const repoPath = resolve(extractDir, extractedRoot);
+        const sourceCandidates = [
+            "packages/create-colonel/template",
+            "examples/web",
+            "apps/web",
+        ];
+
+        const sourcePath = sourceCandidates.find((candidate) =>
+            existsSync(resolve(repoPath, candidate, "package.json"))
+        );
+
+        if (!sourcePath) {
+            throw new Error("No supported scaffold source found in tarball (expected packages/create-colonel/template or examples/web)");
+        }
+
+        const scaffoldSourceDir = resolve(repoPath, sourcePath);
+        cpSync(scaffoldSourceDir, targetDir, { recursive: true });
+
+        const frameworkPkgPath = resolve(repoPath, "packages", "framework", "package.json");
+        let frameworkVersion: string | undefined;
+        if (existsSync(frameworkPkgPath)) {
+            const frameworkPkg = JSON.parse(readFileSync(frameworkPkgPath, "utf8")) as { version?: string };
+            frameworkVersion = frameworkPkg.version;
+        }
+
+        return { frameworkVersion, sourcePath };
     } finally {
         rmSync(tempRoot, { recursive: true, force: true });
     }
@@ -273,8 +300,10 @@ if (existsSync(targetDir)) {
     mkdirSync(targetDir, { recursive: true });
 }
 
+let tarballMeta: TarballScaffoldMeta;
+
 try {
-    await scaffoldFromTarball(targetDir, templateTarballUrl);
+    tarballMeta = await scaffoldFromTarball(targetDir, templateTarballUrl);
 } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`Failed to fetch template tarball: ${message}`);
@@ -284,6 +313,31 @@ try {
 const packageJsonPath = resolve(targetDir, "package.json");
 const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
 packageJson.name = basename(targetDir);
+
+if (packageJson.private === true) {
+    delete packageJson.private;
+}
+
+if (!packageJson.scripts || typeof packageJson.scripts !== "object") {
+    packageJson.scripts = {};
+}
+
+if (!packageJson.scripts.start) {
+    packageJson.scripts.start = "bun --watch src/index.ts";
+}
+
+if (!packageJson.scripts["upgrade:colonel"]) {
+    packageJson.scripts["upgrade:colonel"] = "bun add @coloneldev/framework@latest";
+}
+
+if (!packageJson.dependencies || typeof packageJson.dependencies !== "object") {
+    packageJson.dependencies = {};
+}
+
+if (!packageJson.dependencies["@coloneldev/framework"] || String(packageJson.dependencies["@coloneldev/framework"]).startsWith("workspace:")) {
+    const frameworkVersion = tarballMeta.frameworkVersion ? `^${tarballMeta.frameworkVersion}` : "latest";
+    packageJson.dependencies["@coloneldev/framework"] = frameworkVersion;
+}
 
 const localFrameworkPath = resolve(import.meta.dir, "..", "..", "framework");
 if (existsSync(resolve(localFrameworkPath, "package.json"))) {
@@ -339,7 +393,7 @@ if (consent === "yes" && provisionedAppId && provisionedIngestKey) {
     await trackScaffoldEvent({
         projectName: basename(targetDir),
         skipInstall,
-        template: "create-colonel",
+        template: tarballMeta.sourcePath,
     }, telemetryEndpoint, provisionedAppId, provisionedIngestKey);
 }
 
