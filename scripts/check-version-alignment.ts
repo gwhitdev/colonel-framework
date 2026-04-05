@@ -13,7 +13,6 @@ const readJson = <T>(filePath: string): T => {
 };
 
 const frameworkPkg = readJson<PackageJson>("packages/framework/package.json");
-const templatePkg = readJson<PackageJson>("packages/create-colonel/template/package.json");
 const createPkg = readJson<PackageJson>("packages/create-colonel/package.json");
 
 const failures: string[] = [];
@@ -24,17 +23,6 @@ if (!frameworkPkg.version) {
 
 if (!createPkg.version) {
     failures.push("packages/create-colonel/package.json is missing version");
-}
-
-const expectedFrameworkRange = frameworkPkg.version ? `^${frameworkPkg.version}` : null;
-const templateFrameworkRange = templatePkg.dependencies?.["@coloneldev/framework"];
-
-if (!templateFrameworkRange) {
-    failures.push("packages/create-colonel/template/package.json is missing @coloneldev/framework dependency");
-} else if (expectedFrameworkRange && templateFrameworkRange !== expectedFrameworkRange) {
-    failures.push(
-        `template framework dependency mismatch: expected ${expectedFrameworkRange}, found ${templateFrameworkRange}`
-    );
 }
 
 if (failures.length > 0) {

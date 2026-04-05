@@ -13,8 +13,7 @@ Use this checklist before publishing any Colonel release.
 ## 2. Verify Version Alignment
 
 - Confirm `packages/framework/package.json` has the intended release version.
-- Confirm `packages/create-colonel/template/package.json` depends on `@coloneldev/framework` as `^<framework-version>`.
-- Confirm `packages/create-colonel/package.json` version is bumped when generator/template behavior changes.
+- Confirm `packages/create-colonel/package.json` version is bumped when generator behavior changes.
 
 ## 3. Verify Scaffold Command Consistency
 
@@ -30,10 +29,9 @@ Use this checklist before publishing any Colonel release.
 ## 5. Publish Sequence
 
 1. Publish `@coloneldev/framework`.
-2. Update template dependency range if needed.
-3. Publish `create-colonel`.
-4. Verify scaffold output with `bunx create-colonel my-app`.
-5. Create and push annotated tag (for example `v1.0.0`) on the publish commit.
+2. Publish `create-colonel`.
+3. Verify scaffold output with `bunx create-colonel my-app`.
+4. Create and push annotated tag (for example `v1.0.0`) on the publish commit.
 
 ## 6. Post-Publish Validation
 

@@ -14,7 +14,7 @@ Colonel follows a simple flow:
 ## Core Packages
 
 - packages/framework: reusable runtime (Kernel, Router, HttpRequest, Session, Container)
-- packages/create-colonel: CLI scaffolder and template
+- packages/create-colonel: CLI scaffolder that pulls template content from repository tarball
 - examples/web: canonical app implementation
 
 ## Design Principles

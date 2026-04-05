@@ -1,6 +1,6 @@
 # CLI and Template Workflow
 
-create-colonel scaffolds a full app from the template directory.
+create-colonel scaffolds a full app from the `colonel-framework` repository tarball.
 
 ## Generate a Project
 
@@ -33,5 +33,5 @@ This updates @coloneldev/framework to latest published version.
 Within the monorepo:
 
 - examples/web is the canonical implementation
-- template should track the same app-level conventions
-- docs should reflect framework and template behavior together
+- create-colonel fetches `packages/create-colonel/template` from the configured git ref
+- docs should reflect framework and generated app behavior together

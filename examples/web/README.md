@@ -2,9 +2,9 @@
 
 [![Example](https://img.shields.io/badge/type-reference%20example-2F6FED)](#)
 [![Runtime: Bun](https://img.shields.io/badge/runtime-bun-black)](https://bun.sh)
-[![Template-aligned](https://img.shields.io/badge/template-sync-intentional-0A7B34)](../../packages/create-colonel/template)
+[![Scaffold-source](https://img.shields.io/badge/scaffold-source-colonel--framework-0A7B34)](https://github.com/gwhitdev/colonel-framework)
 
-This workspace package is the canonical example Colonel application used for local development and template evolution.
+This workspace package is the canonical example Colonel application used for local development and scaffold evolution.
 
 ## Run
 

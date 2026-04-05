@@ -12,7 +12,7 @@ Scaffold a new Colonel app from the command line.
 [![npm version](https://img.shields.io/npm/v/create-colonel)](https://www.npmjs.com/package/create-colonel)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](../../LICENSE)
 [![Runtime: Bun](https://img.shields.io/badge/runtime-bun-black)](https://bun.sh)
-[![Template](https://img.shields.io/badge/template-included-2F6FED)](template)
+[![Template](https://img.shields.io/badge/template-source-github%20tarball-2F6FED)](https://github.com/gwhitdev/colonel-framework)
 
 ## Usage
 
@@ -24,6 +24,16 @@ Optional flag:
 
 ```bash
 bunx create-colonel my-app --skip-install
+```
+
+Template source flags:
+
+```bash
+bunx create-colonel my-app --template-ref main
+```
+
+```bash
+bunx create-colonel my-app --template-tarball-url https://codeload.github.com/gwhitdev/colonel-framework/tar.gz/main
 ```
 
 Telemetry flags:
@@ -74,7 +84,8 @@ bun run start
 
 ## What It Does
 
-- Copies the app template into a new folder.
+- Fetches the app template tarball from the `colonel-framework` repository.
+- Extracts `packages/create-colonel/template` from the tarball into a new folder.
 - Sets the generated `package.json` name from the folder name.
 - Installs dependencies automatically.
 - Prints next-step commands.
@@ -82,6 +93,7 @@ bun run start
 ## Requirements
 
 - Bun installed on your machine.
+- Network access to fetch the template tarball.
 - `@coloneldev/framework` published and available on npm.
 
 ## Local Development
