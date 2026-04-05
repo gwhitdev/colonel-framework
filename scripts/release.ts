@@ -11,7 +11,7 @@ type ReleaseArgs = {
     help: boolean;
 };
 
-const repoRoot = resolve(import.meta.dir, "..", "..");
+const repoRoot = resolve(import.meta.dir, "..");
 
 const parseArgs = (argv: string[]): ReleaseArgs => {
     const parsed: ReleaseArgs = {
