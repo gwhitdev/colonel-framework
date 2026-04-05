@@ -7,7 +7,7 @@ import { stdin as input, stdout as output } from "node:process";
 
 type TelemetryConsent = "yes" | "no";
 
-const DEFAULT_TELEMETRY_ENDPOINT = "https://colonel-telemetry.vercel.app/api/ingest";
+const DEFAULT_TELEMETRY_ENDPOINT = "https://colonel-telemetery.vercel.app/api/ingest";
 
 const deriveProvisionEndpoint = (ingestEndpoint: string, publicProvision = false): string => {
     const suffix = publicProvision ? "/api/provision-public" : "/api/provision-app";
