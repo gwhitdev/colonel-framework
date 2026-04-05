@@ -36,6 +36,15 @@ bunx create-colonel my-app --template-ref main
 bunx create-colonel my-app --template-tarball-url https://codeload.github.com/gwhitdev/colonel-framework/tar.gz/main
 ```
 
+Framework dependency selection behavior:
+
+- Default uses npm package `@coloneldev/framework@latest`.
+- Override with `--framework-version`, for example:
+
+```bash
+bunx create-colonel my-app --framework-version ^1.1.9
+```
+
 Telemetry flags:
 
 ```bash

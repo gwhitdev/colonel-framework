@@ -69,7 +69,6 @@ const deriveTemplateTarballUrl = (repo: string, ref: string): string => {
 };
 
 type TarballScaffoldMeta = {
-    frameworkVersion?: string;
     sourcePath: string;
 };
 
@@ -123,14 +122,7 @@ const scaffoldFromTarball = async (targetDir: string, tarballUrl: string): Promi
         const scaffoldSourceDir = resolve(repoPath, sourcePath);
         cpSync(scaffoldSourceDir, targetDir, { recursive: true });
 
-        const frameworkPkgPath = resolve(repoPath, "packages", "framework", "package.json");
-        let frameworkVersion: string | undefined;
-        if (existsSync(frameworkPkgPath)) {
-            const frameworkPkg = JSON.parse(readFileSync(frameworkPkgPath, "utf8")) as { version?: string };
-            frameworkVersion = frameworkPkg.version;
-        }
-
-        return { frameworkVersion, sourcePath };
+        return { sourcePath };
     } finally {
         rmSync(tempRoot, { recursive: true, force: true });
     }
@@ -254,6 +246,9 @@ const provisionToken = parseOptionValue(args, "--telemetry-provision-token")
 const scaffoldCreatedEndpoint = parseOptionValue(args, "--telemetry-scaffold-endpoint")
     ?? process.env.COLONEL_TELEMETRY_SCAFFOLD_ENDPOINT
     ?? deriveScaffoldEndpoint(telemetryEndpoint);
+const frameworkVersionSpec = parseOptionValue(args, "--framework-version")
+    ?? process.env.COLONEL_FRAMEWORK_VERSION
+    ?? "latest";
 const templateRef = parseOptionValue(args, "--template-ref")
     ?? process.env.COLONEL_TEMPLATE_REF
     ?? "main";
@@ -273,6 +268,7 @@ if (showHelp) {
     console.log("  --telemetry-public-provision-endpoint  Override public app provisioning endpoint");
     console.log("  --telemetry-provision-token  Bearer token used for telemetry app provisioning");
     console.log("  --telemetry-scaffold-endpoint  Override scaffold-created ping endpoint");
+    console.log("  --framework-version  NPM version spec for @coloneldev/framework (default: latest)");
     console.log("  --template-ref  Git ref used for template tarball fetch (default: main)");
     console.log("  --template-tarball-url  Full tarball URL override for template fetch");
     process.exit(0);
@@ -335,8 +331,7 @@ if (!packageJson.dependencies || typeof packageJson.dependencies !== "object") {
 }
 
 if (!packageJson.dependencies["@coloneldev/framework"] || String(packageJson.dependencies["@coloneldev/framework"]).startsWith("workspace:")) {
-    const frameworkVersion = tarballMeta.frameworkVersion ? `^${tarballMeta.frameworkVersion}` : "latest";
-    packageJson.dependencies["@coloneldev/framework"] = frameworkVersion;
+    packageJson.dependencies["@coloneldev/framework"] = frameworkVersionSpec;
 }
 
 const localFrameworkPath = resolve(import.meta.dir, "..", "..", "framework");
