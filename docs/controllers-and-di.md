@@ -18,6 +18,39 @@ export class AppController extends Controller {
 
 The container resolves dependencies when Kernel dispatches the controller action.
 
+## Token-Based Providers
+
+The container supports class, string, and symbol tokens. For abstractions, register a token and inject that token.
+
+```ts
+const APP_CONFIG = "app.config";
+const LOGGER = Symbol("logger");
+
+container.register({ provide: APP_CONFIG, useValue: { baseUrl: "https://example.test" } });
+container.register({ provide: LOGGER, useFactory: () => new Logger(), singleton: true });
+container.register({ provide: UserService, useClass: UserService });
+```
+
+Then inject those tokens from controllers or services:
+
+```ts
+class UserController extends Controller {
+  static inject = [APP_CONFIG, LOGGER, UserService];
+
+  constructor(private config: { baseUrl: string }, private logger: Logger, private users: UserService) {
+    super();
+  }
+}
+```
+
+## Test-Time Overrides
+
+For tests, keep production wiring and override specific tokens with `instance`:
+
+```ts
+container.instance(LOGGER, new FakeLogger());
+```
+
 ## Request-Scoped Access
 
 Use request-scoped data through the HttpRequest passed into actions.

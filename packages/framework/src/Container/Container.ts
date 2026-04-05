@@ -7,6 +7,28 @@ type InjectableNewable<T> = Newable<T> & {
 
 type Factory<T> = (container: Container) => T;
 
+export interface ClassProvider<T = unknown> {
+	provide: Token<T>;
+	useClass: InjectableNewable<T>;
+	singleton?: boolean;
+}
+
+export interface FactoryProvider<T = unknown> {
+	provide: Token<T>;
+	useFactory: Factory<T>;
+	singleton?: boolean;
+}
+
+export interface ValueProvider<T = unknown> {
+	provide: Token<T>;
+	useValue: T;
+}
+
+export type Provider<T = unknown> =
+	| ClassProvider<T>
+	| FactoryProvider<T>
+	| ValueProvider<T>;
+
 
 
 interface Binding<T = unknown> {
@@ -18,9 +40,43 @@ const isNewable = <T>(value: Token<T>): value is Newable<T> => {
 	return typeof value === "function";
 };
 
+const instantiateInjectable = <T>(
+	container: Container,
+	type: InjectableNewable<T>
+): T => {
+	const dependencies = (type.inject ?? []).map((dependencyToken) =>
+		container.make(dependencyToken)
+	);
+
+	return new type(...dependencies);
+};
+
 export class Container {
 	private bindings = new Map<Token, Binding>();
 	private instances = new Map<Token, unknown>();
+
+	register<T>(provider: Provider<T>): this {
+		if ("useValue" in provider) {
+			return this.instance(provider.provide, provider.useValue);
+		}
+
+		if ("useFactory" in provider) {
+			if (provider.singleton) {
+				return this.singleton(provider.provide, provider.useFactory);
+			}
+
+			return this.bind(provider.provide, provider.useFactory);
+		}
+
+		const factory = (container: Container): T =>
+			instantiateInjectable(container, provider.useClass);
+
+		if (provider.singleton) {
+			return this.singleton(provider.provide, factory);
+		}
+
+		return this.bind(provider.provide, factory);
+	}
 
 	bind<T>(token: Token<T>, factory: Factory<T>): this {
 		this.bindings.set(token, { factory, singleton: false });
@@ -59,12 +115,7 @@ export class Container {
 		}
 
 		if (isNewable(token)) {
-			const injectableToken = token as InjectableNewable<T>;
-			const dependencies = (injectableToken.inject ?? []).map((dependencyToken) =>
-				this.make(dependencyToken)
-			);
-
-			return new injectableToken(...dependencies);
+			return instantiateInjectable(this, token as InjectableNewable<T>);
 		}
 
 		throw new Error(`Container binding not found for token: ${String(token)}`);

@@ -31,7 +31,36 @@ The following conventions are stable for generated apps and framework users.
 
 - Controllers are resolved through the configured `controllerResolver`.
 - Constructor injection via `static inject` is stable.
+- DI tokens may be class constructors, strings, or symbols.
+- Missing non-class tokens throw `Container binding not found for token: <token>`.
+- Singleton bindings remain singleton for the container lifecycle unless overridden.
 - Controller actions may return `Response`, objects, strings, or view payload tuples.
+
+#### Stable DI Registration Styles
+
+The following registration APIs are stable in 1.x:
+
+- `bind(token, factory)` for transient values.
+- `singleton(token, factory)` for memoized values.
+- `instance(token, value)` for explicit prebuilt values.
+- `register({ provide, useClass | useFactory | useValue, singleton? })` for provider-style wiring.
+
+Provider style is additive and does not replace class-token behavior.
+
+#### Test-Time Overrides
+
+Use `instance` to replace dependencies for tests without changing application wiring:
+
+```ts
+class Clock {
+	now() {
+		return Date.now();
+	}
+}
+
+container.singleton(Clock, () => new Clock());
+container.instance(Clock, { now: () => 123 });
+```
 
 ### Middleware
 
